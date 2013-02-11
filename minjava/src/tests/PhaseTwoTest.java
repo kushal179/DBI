@@ -60,6 +60,7 @@ public class PhaseTwoTest {
 		SystemDefs sysdef = new SystemDefs(dbpath, 1000, GlobalConst.NUMBUF,
 				"Clock");
 
+		System.out.println("dfdfd");
 	}
 
 	public void readFile(String fileName) throws IOException,

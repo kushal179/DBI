@@ -794,7 +794,6 @@ class JoinsDriver implements GlobalConst {
 			System.err.println ("*** Error setting up scan for reserves");
 			Runtime.getRuntime().exit(1);
 		}
-
 		FldSpec [] proj_list = {
 
 				//new FldSpec(new RelSpec(RelSpec.outer), 2),
@@ -811,7 +810,12 @@ class JoinsDriver implements GlobalConst {
 				new FldSpec(new RelSpec(RelSpec.outer), 5)
 
 		};
-
+		//changes start
+		int innerCount = getCount(proj_list, RelSpec.innerRel) ;
+		int outerCount = proj_list.length - innerCount;
+		
+		//changes end
+		
 		AttrType [] jtype     = { new AttrType(AttrType.attrInteger),
 				new AttrType(AttrType.attrString),
 				new AttrType(AttrType.attrReal),
@@ -824,7 +828,17 @@ class JoinsDriver implements GlobalConst {
 		TupleOrder ascending = new TupleOrder(TupleOrder.Ascending);
 		SortMerge sm = null;
 		try {
+			
 			sm = new SortMerge(Stypes, 5, Ssizes,
+			Rtypes, 4, Rsizes,
+			1, 4,
+			1, 4,
+			10,
+			am, am2,
+			false, false, ascending,
+			outFilter, proj_list, 8,innerCount,outerCount);
+	}
+			/*sm = new SortMerge(Stypes, 5, Ssizes,
 					Rtypes, 4, Rsizes,
 					1, 4,
 					1, 4,
@@ -832,7 +846,7 @@ class JoinsDriver implements GlobalConst {
 					am, am2,
 					false, false, ascending,
 					outFilter, proj_list, 8);
-		}
+		}*/
 		catch (Exception e) {
 			status = FAIL;
 			System.err.println (""+e);
@@ -880,6 +894,23 @@ class JoinsDriver implements GlobalConst {
 		}
 	}
 
+	
+	//this method returns the count of inner or outer relation based on type field
+	private int getCount(FldSpec [] projList, int type){
+		int incount =0;
+		for(int i=0;i<projList.length;i++){
+			if(projList[i].relation.key == type)
+				incount++;
+		}
+		return incount;
+		
+	} 
+	
+	
+	
+	
+	
+	
 	public void Query4() {
 		System.out.print("**********************Query4 strating *********************\n");
 		boolean status = OK;

@@ -83,31 +83,31 @@ class JoinsDriver implements GlobalConst {
 		boats    = new Vector();
 		reserves = new Vector();
 
-		sailors.addElement(new Sailor(53, "Bob Holloway",       9, 53.6, 0.8));
-		sailors.addElement(new Sailor(54, "Susan Horowitz",     1, 34.2, 0.8));
-		sailors.addElement(new Sailor(57, "Yannis Ioannidis",   8, 40.2, 0.8));
-		sailors.addElement(new Sailor(59, "Deborah Joseph",    10, 39.8, 0.8));
-		sailors.addElement(new Sailor(61, "Landwebber",         8, 56.7, 0.8));
-		sailors.addElement(new Sailor(63, "James Larus",        9, 30.3, 0.8));
-		sailors.addElement(new Sailor(64, "Barton Miller",      5, 43.7, 0.8));
-		sailors.addElement(new Sailor(67, "David Parter",       1, 99.9, 0.8));   
-		sailors.addElement(new Sailor(69, "Raghu Ramakrishnan", 9, 37.1, 0.8));
-		sailors.addElement(new Sailor(71, "Guri Sohi",         10, 42.1, 0.8));
-		sailors.addElement(new Sailor(73, "Prasoon Tiwari",     8, 39.2, 0.8));
-		sailors.addElement(new Sailor(39, "Anne Condon",        3, 30.3, 0.8));
-		sailors.addElement(new Sailor(47, "Charles Fischer",    6, 46.3, 0.8));
-		sailors.addElement(new Sailor(49, "James Goodman",      4, 50.3, 0.8));
-		sailors.addElement(new Sailor(50, "Mark Hill",          5, 35.2, 0.8));
-		sailors.addElement(new Sailor(75, "Mary Vernon",        7, 43.1, 0.8));
-		sailors.addElement(new Sailor(79, "David Wood",         3, 39.2, 0.8));
-		sailors.addElement(new Sailor(84, "Mark Smucker",       9, 25.3, 0.8));
-		sailors.addElement(new Sailor(87, "Martin Reames",     10, 24.1, 0.8));
-		sailors.addElement(new Sailor(10, "Mike Carey",         9, 40.3, 0.8));
-		sailors.addElement(new Sailor(21, "David Dewitt",      10, 47.2, 0.8));
-		sailors.addElement(new Sailor(29, "Tom Reps",           7, 39.1, 0.8));
-		sailors.addElement(new Sailor(31, "Jeff Naughton",      5, 35.0, 0.8));
-		sailors.addElement(new Sailor(35, "Miron Livny",        7, 37.6, 0.8));
-		sailors.addElement(new Sailor(37, "Marv Solomon",      10, 48.9, 0.8));
+		sailors.addElement(new Sailor(53, "Bob Holloway",       9, 53.6, 0.81));
+		sailors.addElement(new Sailor(54, "Susan Horowitz",     1, 34.2, 0.82));
+		sailors.addElement(new Sailor(57, "Yannis Ioannidis",   8, 40.2, 0.83));
+		sailors.addElement(new Sailor(59, "Deborah Joseph",    10, 39.8, 0.84));
+		sailors.addElement(new Sailor(61, "Landwebber",         8, 56.7, 0.85));
+		sailors.addElement(new Sailor(63, "James Larus",        9, 30.3, 0.86));
+		sailors.addElement(new Sailor(64, "Barton Miller",      5, 43.7, 0.87));
+		sailors.addElement(new Sailor(67, "David Parter",       1, 99.9, 0.88));   
+		sailors.addElement(new Sailor(69, "Raghu Ramakrishnan", 9, 37.1, 0.89));
+		sailors.addElement(new Sailor(71, "Guri Sohi",         10, 42.1, 0.98));
+		sailors.addElement(new Sailor(73, "Prasoon Tiwari",     8, 39.2, 0.88));
+		sailors.addElement(new Sailor(39, "Anne Condon",        3, 30.3, 0.78));
+		sailors.addElement(new Sailor(47, "Charles Fischer",    6, 46.3, 0.68));
+		sailors.addElement(new Sailor(49, "James Goodman",      4, 50.3, 0.58));
+		sailors.addElement(new Sailor(50, "Mark Hill",          5, 35.2, 0.48));
+		sailors.addElement(new Sailor(75, "Mary Vernon",        7, 43.1, 0.38));
+		sailors.addElement(new Sailor(79, "David Wood",         3, 39.2, 0.28));
+		sailors.addElement(new Sailor(84, "Mark Smucker",       9, 25.3, 0.18));
+		sailors.addElement(new Sailor(87, "Martin Reames",     10, 24.1, 0.2));
+		sailors.addElement(new Sailor(10, "Mike Carey",         9, 40.3, 0.1));
+		sailors.addElement(new Sailor(21, "David Dewitt",      10, 47.2, 0.3));
+		sailors.addElement(new Sailor(29, "Tom Reps",           7, 39.1, 0.4));
+		sailors.addElement(new Sailor(31, "Jeff Naughton",      5, 35.0, 0.5));
+		sailors.addElement(new Sailor(35, "Miron Livny",        7, 37.6, 0.6));
+		sailors.addElement(new Sailor(37, "Marv Solomon",      10, 48.9, 0.7));
 
 		boats.addElement(new Boats(1, "Onion",      "white"));
 		boats.addElement(new Boats(2, "Buckey",     "red"  ));
@@ -828,22 +828,23 @@ class JoinsDriver implements GlobalConst {
 				new AttrType(AttrType.attrReal)};
 
 		TupleOrder ascending = new TupleOrder(TupleOrder.Ascending);
-		TopNestedLoopsJoins sm = null;
+		//TopNestedLoopsJoins sm = null;
+		TopSortMerge sm = null;
 		try {
 			
-			/*sm = new SortMerge(Stypes, 5, Ssizes,
+			sm = new TopSortMerge(Stypes, 5, Ssizes,
 			Rtypes, 4, Rsizes,
 			1, 4,
 			1, 4,
 			10,
 			am, am2,
 			false, false, ascending,
-			outFilter, proj_list, 8,innerCount,outerCount);*/
-			sm = new TopNestedLoopsJoins (Stypes, 5, Ssizes,
+			outFilter, proj_list, 8,4,innerCount,outerCount);
+			/*sm = new TopNestedLoopsJoins (Stypes, 5, Ssizes,
 					  Rtypes, 4, Rsizes,
 					  10,
 					  am, "reserves.in",
-					  outFilter, null, proj_list, 8, 5);
+					  outFilter, null, proj_list, 8, 5);*/
 			
 			
 	}

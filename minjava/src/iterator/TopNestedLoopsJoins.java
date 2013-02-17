@@ -136,7 +136,6 @@ public class TopNestedLoopsJoins  extends Iterator
 	    Tuple t = null;
 	    try {
 	      while ((t = sort_names.get_next()) != null) {
-	    	  System.out.println("nitish da lauda");
 	        t.print(Jtypes);
 	        //qcheck2.Check(t);
 	      }

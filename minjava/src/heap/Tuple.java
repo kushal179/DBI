@@ -396,6 +396,7 @@ public void setHdr (short numFlds,  AttrType types[], short strSizes[])
   
   //sizeof short =2  +2: array siaze = numFlds +1 (0 - numFilds) and
   //another 1 for fldCnt
+  //??need to verify y it is setting first offset
   fldOffset[0] = (short) ((numFlds +2) * 2 + tuple_offset);   
    
   Convert.setShortValue(fldOffset[0], pos, data);

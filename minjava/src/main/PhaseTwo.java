@@ -160,6 +160,7 @@ public class PhaseTwo {
 			RID rid = heapfile.insertRecord(t.returnTupleByteArray());
 			System.out.println("RECORD ID SLOT NO:" + rid.slotNo);
 			System.out.println("PAGE NO:" + rid.pageNo);
+			System.out.println("PAGE ACCESS::"+PCounter.counter);
 		}
 		tableMap.put(fileName, metaData);
 		file.close();
@@ -223,6 +224,7 @@ public class PhaseTwo {
 				System.err.println("" + e);
 			}
 			System.out.println("PAGE ACCESS::"+PCounter.counter);
+			
 
 		}
 	}

@@ -19,7 +19,7 @@ import java.io.*;
  *              if (ri == sj) then add (r, s) to the result.
  */
 
-public class TopNestedLoopsJoins  extends Iterator 
+public class TopNestedLoopsJoins  extends NestedLoopsJoins 
 {
   private AttrType      _in1[],  _in2[];
   private   int        in1_len, in2_len;
@@ -70,11 +70,11 @@ public class TopNestedLoopsJoins  extends Iterator
 			   CondExpr rightFilter[],    
 			   FldSpec   proj_list[],
 			   int        n_out_flds,
-			   int _num
+			   int _num,int innerCounter,int outerCounter
 			   ) throws IOException,NestedLoopException
     {
 	  NestedLoopsJoins nlj = new NestedLoopsJoins(in1, len_in1,t1_str_sizes,in2,len_in2,t2_str_sizes,
-			  amt_of_mem,am1,relationName,outFilter,rightFilter, proj_list,n_out_flds);
+			  amt_of_mem,am1,relationName,outFilter,rightFilter, proj_list,n_out_flds,innerCounter,outerCounter);
       
       _in1 = new AttrType[in1.length];
       _in2 = new AttrType[in2.length];
@@ -96,16 +96,17 @@ public class TopNestedLoopsJoins  extends Iterator
       done  = false;
       get_from_outer = true;
       
-      AttrType[] Jtypes = new AttrType[n_out_flds];
+      AttrType[] Jtypes = new AttrType[n_out_flds - 1];
       short[]    t_size;
       
       perm_mat = proj_list;
-      nOutFlds = n_out_flds;
+      nOutFlds = n_out_flds-1;
+      int count = 0;
       try {
 	t_size = TupleUtils.setup_op_tuple(Jtuple, Jtypes,
 					   in1, len_in1, in2, len_in2,
 					   t1_str_sizes, t2_str_sizes,
-					   proj_list, nOutFlds);
+					   proj_list, n_out_flds - 1);
       }catch (TupleUtilsException e){
 	throw new NestedLoopException(e,"TupleUtilsException is caught by NestedLoopsJoins.java");
       }
@@ -125,7 +126,7 @@ public class TopNestedLoopsJoins  extends Iterator
 	    Sort sort_names = null;
 	    try {
 	      sort_names = new Sort (Jtypes,(short)nOutFlds, t_size,
-				     (iterator.Iterator) nlj, 1, descending, t_size[0], 10);
+				     (iterator.Iterator) nlj, Jtypes.length, descending,30, amt_of_mem);
 	    }
 	    catch (Exception e) {
 	      System.err.println ("*** Error preparing for nested_loop_join");
@@ -135,8 +136,9 @@ public class TopNestedLoopsJoins  extends Iterator
 	    
 	    Tuple t = null;
 	    try {
-	      while ((t = sort_names.get_next()) != null) {
+	      while ((t = sort_names.get_next()) != null && _num > count) {
 	        t.print(Jtypes);
+	        count++;
 	        //qcheck2.Check(t);
 	      }
 	    } catch (Exception e) {
@@ -163,7 +165,7 @@ public class TopNestedLoopsJoins  extends Iterator
    *@exception UnknownKeyTypeException key type unknown
    *@exception Exception other exceptions
 
-   */
+   *//*
   public Tuple get_next()
     throws IOException,
 	   JoinsException ,
@@ -252,13 +254,13 @@ public class TopNestedLoopsJoins  extends Iterator
 	} while (true);
     } 
  
-  /**
+  *//**
    * implement the abstract method close() from super class Iterator
    *to finish cleaning up
    *@exception IOException I/O error from lower layers
    *@exception JoinsException join error from lower layers
    *@exception IndexException index access error 
-   */
+   *//*
   public void close() throws JoinsException, IOException,IndexException 
     {
       if (!closeFlag) {
@@ -270,7 +272,7 @@ public class TopNestedLoopsJoins  extends Iterator
 	}
 	closeFlag = true;
       }
-    }
+    }*/
 }
 
 

@@ -30,4 +30,11 @@ public interface GlobalConst {
   public static final int MAX_NAME = 50;
 
   public static final int INVALID_PAGE = -1;
+  
+  /**
+   *  Top K operation
+   */
+  
+  public static final int TOPKSORTMERGER = 0;
+  public static final int TOPKNESTEDJOIN = 1;
 }

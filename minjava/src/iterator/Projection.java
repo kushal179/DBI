@@ -15,6 +15,7 @@ public class Projection {
 	 * Tuple Jtuple,before calling this mehtod. we know that this two tuple can
 	 * join in the common field
 	 * 
+	 * 
 	 * @param t1
 	 *            The Tuple will be joined with t2
 	 * @param type1
@@ -79,32 +80,49 @@ public class Projection {
 				break;
 			}
 		}
+	
 		return;
 	}
 
-	// Replicating join in order to calculate avg of score for two tuples
+	
+	
+	/**
+	 * Assume that proj_list doesn't have score attribute
+	 * 
+	 * @param t1
+	 *            The Tuple will be joined with t2
+	 * @param type1
+	 *            [] The array used to store the each attribute type
+	 * @param t2
+	 *            The Tuple will be joined with t1
+	 * @param type2
+	 *            [] The array used to store the each attribute type
+	 * @param Jtuple
+	 *            the returned Tuple
+	 * @param perm_mat
+	 *            [] shows what input fields go where in the output tuple
+	 * @param nOutFlds
+	 *            number of outer relation field
+	 * @exception UnknowAttrType
+	 *                attrbute type does't match
+	 * @exception FieldNumberOutOfBoundException
+	 *                field number exceeds limit
+	 * @exception IOException
+	 *                some I/O fault
+	 */
 	public static void Join(Tuple t1, AttrType type1[], Tuple t2, AttrType type2[], Tuple Jtuple,
-			FldSpec perm_mat[], int nOutFlds,int innerCounter,int outerCounter) throws UnknowAttrType,
+			FldSpec perm_mat[], int nOutFlds,boolean flag) throws UnknowAttrType,
 			FieldNumberOutOfBoundException, IOException {
-		int outCount = outerCounter;
-		int inCount = innerCounter;
+
 		for (int i = 0; i < nOutFlds; i++) {
 			switch (perm_mat[i].relation.key) {
 			case RelSpec.outer: // Field of outer (t1)
-				 
-				innerCounter--;
 				switch (type1[perm_mat[i].offset - 1].attrType) {
 				case AttrType.attrInteger:
 					Jtuple.setIntFld(i + 1, t1.getIntFld(perm_mat[i].offset));
 					break;
 				case AttrType.attrReal:
-					/*Jtuple.setFloFld(i + 1, t1.getFloFld(perm_mat[i].offset));
-					break;*/
-					//Task2: to calculate avg of the score
-					if(innerCounter==0)
-						Jtuple.setFloFld(i + 1, (t1.getFloFld(perm_mat[i].offset)+t2.getFloFld(inCount))/2);
-					else
-						Jtuple.setFloFld(i + 1, t1.getFloFld(perm_mat[i].offset));
+					Jtuple.setFloFld(i + 1, t1.getFloFld(perm_mat[i].offset));
 					break;
 				case AttrType.attrString:
 					Jtuple.setStrFld(i + 1, t1.getStrFld(perm_mat[i].offset));
@@ -117,13 +135,71 @@ public class Projection {
 				break;
 
 			case RelSpec.innerRel: // Field of inner (t2)
-				outerCounter--;
 				switch (type2[perm_mat[i].offset - 1].attrType) {
 				case AttrType.attrInteger:
 					Jtuple.setIntFld(i + 1, t2.getIntFld(perm_mat[i].offset));
 					break;
 				case AttrType.attrReal:
 					Jtuple.setFloFld(i + 1, t2.getFloFld(perm_mat[i].offset));
+					break;
+				case AttrType.attrString:
+					Jtuple.setStrFld(i + 1, t2.getStrFld(perm_mat[i].offset));
+					break;
+				default:
+
+					throw new UnknowAttrType("Don't know how to handle attrSymbol, attrNull");
+
+				}
+				break;
+			}
+		}
+		float val=(t1.getScore()+t2.getScore())/2;
+		
+		
+		//Jtuple.setFloFld(nOutFlds + 1, val);
+		Jtuple.setScore(val);
+		return;
+	}
+	
+	
+	// Replicating join in order to calculate avg of score for two tuples
+	public static void Join(Tuple t1, AttrType type1[], Tuple t2, AttrType type2[], Tuple Jtuple,
+			FldSpec perm_mat[], int nOutFlds,int innerCounter,int outerCounter) throws UnknowAttrType,
+			FieldNumberOutOfBoundException, IOException {
+		int outCount = outerCounter;
+		for (int i = 0; i < nOutFlds; i++) {
+			switch (perm_mat[i].relation.key) {
+			case RelSpec.outer: // Field of outer (t1)
+				 
+				outerCounter--;
+				switch (type1[perm_mat[i].offset - 1].attrType) {
+				case AttrType.attrInteger:
+					Jtuple.setIntFld(i + 1, t1.getIntFld(perm_mat[i].offset));
+					break;
+				case AttrType.attrReal:
+					Jtuple.setFloFld(i + 1, t1.getFloFld(perm_mat[i].offset));
+					break;
+				case AttrType.attrString:
+					Jtuple.setStrFld(i + 1, t1.getStrFld(perm_mat[i].offset));
+					break;
+				default:
+
+					throw new UnknowAttrType("Don't know how to handle attrSymbol, attrNull");
+
+				}
+				break;
+
+			case RelSpec.innerRel: // Field of inner (t2)
+				innerCounter--;
+				switch (type2[perm_mat[i].offset - 1].attrType) {
+				case AttrType.attrInteger:
+					Jtuple.setIntFld(i + 1, t2.getIntFld(perm_mat[i].offset));
+					break;
+				case AttrType.attrReal:
+					if(innerCounter==0)
+						Jtuple.setFloFld(i + 1, (t2.getFloFld(perm_mat[i].offset)+t1.getFloFld(outCount))/2);
+					else
+						Jtuple.setFloFld(i + 1, t2.getFloFld(perm_mat[i].offset));
 					break;
 				case AttrType.attrString:
 					Jtuple.setStrFld(i + 1, t2.getStrFld(perm_mat[i].offset));

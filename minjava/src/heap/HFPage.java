@@ -27,7 +27,7 @@ interface ConstSlot{
 public class HFPage extends Page 
   implements ConstSlot, GlobalConst{
 
-  public PCounter pc = new PCounter();
+  
   
   
   public static final int SIZE_OF_SLOT = 4;
@@ -192,7 +192,6 @@ public class HFPage extends Page
     throws IOException 
     {
       prevPage.pid =  Convert.getIntValue (PREV_PAGE, data);
-      pc.increment();
       return prevPage;
     }
   
@@ -216,7 +215,7 @@ public class HFPage extends Page
     throws IOException
     {
       nextPage.pid =  Convert.getIntValue (NEXT_PAGE, data);
-      pc.increment();     
+           
       return nextPage;
     }
   
@@ -240,7 +239,7 @@ public class HFPage extends Page
     throws IOException
     {
       curPage.pid =  Convert.getIntValue (CUR_PAGE, data);
-      pc.increment(); 
+      
       return curPage;
     }
   

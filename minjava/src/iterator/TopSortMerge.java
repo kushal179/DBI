@@ -70,7 +70,7 @@ public class TopSortMerge extends SortMerge implements GlobalConst {
 	 * @exception JoinLowMemory
 	 *                memory not enough
 	 * @exception SortException
-	 *                exception from sorting
+	 *                exception from sortingR
 	 * @exception TupleUtilsException
 	 *                exception from using tuple utils
 	 * @exception IOException
@@ -122,12 +122,11 @@ public class TopSortMerge extends SortMerge implements GlobalConst {
 		    Sort sort_names = null;
 		    try {
 		      sort_names = new Sort (Jtypes,(short)nOutFlds, ts_size,
-					     (iterator.Iterator) smj, 3, descending, ts_size[0], 10);
+					     (iterator.Iterator) smj, Jtypes.length, descending,30, amt_of_mem);
 		    }
 		    catch (Exception e) {
 		      System.err.println ("*** Error preparing for nested_loop_join");
-		      System.err.println (""+e);
-		      Runtime.getRuntime().exit(1);
+		      e.printStackTrace();	     
 		    }
 		    
 		    Tuple t = null;
@@ -137,12 +136,10 @@ public class TopSortMerge extends SortMerge implements GlobalConst {
 		    	//sortTupleList.add(t);  
 		        t.print(Jtypes);
 		        count++;
-		        //qcheck2.Check(t);
 		      }
 		    } catch (Exception e) {
 		        System.err.println (""+e);
 		        e.printStackTrace();
-		        Runtime.getRuntime().exit(1);
 		      }
 	}
 	

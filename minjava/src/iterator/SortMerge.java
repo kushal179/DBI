@@ -40,6 +40,10 @@ public class SortMerge extends Iterator implements GlobalConst {
 	private int nOutFlds;
 	private int innerCounter;
 	private int outerCounter;
+	
+	public SortMerge(){
+		
+	}
 
 	/**
 	 * constructor,initialization

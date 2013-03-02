@@ -1,9 +1,11 @@
 package main;
 
+import global.AttrOperator;
 import global.AttrType;
 import global.GlobalConst;
 import global.RID;
 import global.SystemDefs;
+import global.TupleOrder;
 import heap.FieldNumberOutOfBoundException;
 import heap.HFBufMgrException;
 import heap.HFDiskMgrException;
@@ -14,10 +16,12 @@ import heap.InvalidTupleSizeException;
 import heap.InvalidTypeException;
 import heap.SpaceNotAvailableException;
 import heap.Tuple;
+import iterator.CondExpr;
 import iterator.DuplElim;
 import iterator.FileScan;
 import iterator.FldSpec;
 import iterator.RelSpec;
+import iterator.TopSortMerge;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -109,6 +113,7 @@ public class PhaseTwo {
 
 					attTypes[j] = new AttrType(AttrType.attrString);
 					Ssizes[j] = 30;
+					metaData.setSsizes(Ssizes);
 				}
 				attTypes[numAttrField - 1] = new AttrType(AttrType.attrReal);
 				i = 1;
@@ -137,15 +142,17 @@ public class PhaseTwo {
 				int index = cell.getColumnIndex() + 1;
 				switch (cell.getCellType()) {
 				case Cell.CELL_TYPE_NUMERIC:
-					//System.out.print(cell.getNumericCellValue() + "\t\t");
+					// System.out.print(cell.getNumericCellValue() + "\t\t");
 					numofNonStrAttr++;
 					if (index == numAttrField)
 						t.setScore((float) cell.getNumericCellValue());
 					else
-						t.setStrFld(index, cell.getStringCellValue());
+						t.setStrFld(index,
+								((Double) cell.getNumericCellValue())
+										.toString());
 					break;
 				case Cell.CELL_TYPE_STRING:
-					//System.out.print(cell.getStringCellValue() + "\t\t");
+					// System.out.print(cell.getStringCellValue() + "\t\t");
 					numofStrAttr++;
 					t.setStrFld(index, cell.getStringCellValue());
 					break;
@@ -160,13 +167,112 @@ public class PhaseTwo {
 			RID rid = heapfile.insertRecord(t.returnTupleByteArray());
 			System.out.println("RECORD ID SLOT NO:" + rid.slotNo);
 			System.out.println("PAGE NO:" + rid.pageNo);
-			System.out.println("PAGE ACCESS::"+PCounter.counter);
+			System.out.println("PAGE ACCESS::" + PCounter.counter);
 		}
 		tableMap.put(fileName, metaData);
 		file.close();
-		
 
 	}
+
+	public void topSortMerge(int k,
+			String tableName1,String tableName2,
+			int amtMemory,
+			int joinCol1,int joinCol2) {
+		//TODO: if time permits accept order from User i.e. ASC OR DESC
+		TupleOrder ascending = new TupleOrder(TupleOrder.Ascending);
+		TopSortMerge sm = null;
+		MetaData meta1 = tableMap.get(tableName1);
+		MetaData meta2 = tableMap.get(tableName2);
+		if (meta1 == null && meta2 ==null){
+			System.err.println("No Matching table found");
+		}
+	else{
+	
+		try {
+			CondExpr [] outFilter  = new CondExpr[2];
+			outFilter[0] = new CondExpr();
+			outFilter[1] = new CondExpr();
+			condExpr(outFilter,joinCol1,joinCol2);
+			int totalNumAttr1 = meta1.getNumOfAttr();
+			int totalNumAttr2 = meta2.getNumOfAttr();
+			FldSpec[] proj_list = getFieldProjection(totalNumAttr1, totalNumAttr2);
+			int innerCount = getCount(proj_list, RelSpec.innerRel) ;
+			int outerCount = proj_list.length - innerCount;
+			iterator.Iterator  fileScan1 =null;iterator.Iterator  fileScan2 =null;
+			fileScan1 = new FileScan(getHeapFileName(tableName1), generateAttrTypeArray(totalNumAttr1),
+					meta1.getSsizes(), (short) totalNumAttr1, (short) totalNumAttr1,
+					projections(totalNumAttr1), null);
+			fileScan2 = new FileScan(getHeapFileName(tableName2), generateAttrTypeArray(totalNumAttr2),
+					meta2.getSsizes(), (short) totalNumAttr2, (short) totalNumAttr2,
+					projections(totalNumAttr2), null);
+			
+			sm = new TopSortMerge(generateAttrTypeArray(totalNumAttr1), totalNumAttr1, meta1.getSsizes(), 
+								generateAttrTypeArray(totalNumAttr2), totalNumAttr2, meta2.getSsizes(),
+								joinCol1, 30,
+								joinCol2, 30, 
+								amtMemory, 
+								fileScan1, fileScan2, 
+								false, false, 
+								ascending, outFilter,
+								proj_list, totalNumAttr1+totalNumAttr2, k, 
+								innerCount, outerCount);
+		System.out.println("Total Page Access After TopKSort Merge:"+PCounter.getCounter());
+		} catch (Exception e) {
+			System.err.println("" + e);
+			e.printStackTrace();
+		}
+		}
+	}
+	
+	private void condExpr(CondExpr[] expr,int joinCol1,int joinCol2){
+		expr[0].next  = null;
+		expr[0].op    = new AttrOperator(AttrOperator.aopEQ);
+		expr[0].type1 = new AttrType(AttrType.attrSymbol);
+		expr[0].operand1.symbol = new FldSpec (new RelSpec(RelSpec.outer),joinCol1);//Relation_1 outer
+		expr[0].type2 = new AttrType(AttrType.attrSymbol);
+		expr[0].operand2.symbol = new FldSpec (new RelSpec(RelSpec.innerRel),joinCol2);//Relation_1 inner
+		expr[1] = null;
+		
+	}
+	//this method returns the count of inner or outer relation based on type field
+		private int getCount(FldSpec [] projList, int type){
+			int incount =0;
+			for(int i=0;i<projList.length;i++){
+				if(projList[i].relation.key == type)
+					incount++;
+			}
+			return incount;
+			
+		} 
+		
+	//this method returns the fieldProjection
+		private FldSpec [] getFieldProjection(int totalNumAttr1,int totalNumAttr2){
+			FldSpec [] proj_list = new FldSpec[totalNumAttr1+totalNumAttr2];
+			if(totalNumAttr1==0&&totalNumAttr2==0){
+				System.err.println("Please enter non zero attribute count");
+				return null;
+			}
+			else{
+			
+			int offSetCount = 1;
+			int i;
+			for(i=0;i<totalNumAttr1;i++){
+				proj_list[i] = new FldSpec(new RelSpec(RelSpec.innerRel),offSetCount);
+				offSetCount++;
+			}
+			offSetCount = 1;
+			for(int j=0;j<totalNumAttr2;j++)
+			{	
+				proj_list[i] = new FldSpec(new RelSpec(RelSpec.outer),offSetCount);
+				offSetCount++;
+				i++;
+			}
+					
+			}
+			
+			return proj_list;
+			
+		}
 
 	private String getHeapFileName(String fileName) {
 		String string[] = fileName.split("\\.");
@@ -174,6 +280,18 @@ public class PhaseTwo {
 		builder.append(string[0]).append(".in");
 		return builder.toString();
 
+	}
+	public AttrType[] generateAttrTypeArray(int totalNumOfAttr){
+		AttrType[] attrType = new AttrType[totalNumOfAttr];
+		
+		
+		for(int i=0;i<totalNumOfAttr-1;i++){
+			attrType[i] = new AttrType(AttrType.attrString);
+			
+		}
+		attrType[totalNumOfAttr-1] = new AttrType(AttrType.attrReal);
+		
+		return attrType;
 	}
 
 	private Heapfile makeHeapFile(String fileName) {
@@ -223,11 +341,11 @@ public class PhaseTwo {
 			} catch (Exception e) {
 				System.err.println("" + e);
 			}
-			System.out.println("PAGE ACCESS::"+PCounter.counter);
-			
+			System.out.println("PAGE ACCESS::" + PCounter.counter);
 
 		}
 	}
+
 	private void printDistinctTuple(String fileName) {
 		MetaData meta = tableMap.get(fileName);
 		if (meta == null)
@@ -248,7 +366,8 @@ public class PhaseTwo {
 				fileScan = new FileScan(getHeapFileName(fileName), attTypes,
 						Ssizes, (short) numOfAttr, (short) numOfAttr,
 						projections(numOfAttr), null);
-				distinct = new DuplElim(attTypes,(short)numOfAttr,Ssizes,fileScan,10,false);
+				distinct = new DuplElim(attTypes, (short) numOfAttr, Ssizes,
+						fileScan, 10, false);
 				Tuple t = null;
 				while ((t = distinct.get_next()) != null) {
 					t.print(attTypes);
@@ -294,7 +413,7 @@ public class PhaseTwo {
 						new InputStreamReader(System.in));
 				try {
 					String file = fileName.readLine();
-					
+
 					obj.createTable(file);
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
@@ -325,8 +444,8 @@ public class PhaseTwo {
 			case 3:
 				System.out.println("SELECT DISTINCT * FROM <table Name>");
 				System.out.println("Enter table name including .xlsx:");
-				BufferedReader ip = new BufferedReader(
-						new InputStreamReader(System.in));
+				BufferedReader ip = new BufferedReader(new InputStreamReader(
+						System.in));
 				try {
 					String file = ip.readLine();
 					obj.printDistinctTuple(file);
@@ -343,7 +462,47 @@ public class PhaseTwo {
 				break;
 
 			case 6:
-				System.out.println("Find top K SortMergeJoin");
+				System.out.println("*************Find top K SortMergeJoin****************");
+				
+				try {
+					System.out.println("Enter Top K value:");
+					BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+					int k = Integer.parseInt(br.readLine());
+					System.out.println("Enter Name of Relation 1:");
+					br = new BufferedReader(new InputStreamReader(System.in));
+					String tableName1 = br.readLine();
+					System.out.println("Enter Name of Relation 2:");
+					br = new BufferedReader(new InputStreamReader(System.in));
+					String tableName2 = br.readLine();
+					
+					System.out.println("Enter Amount of Memory:");
+					br = new BufferedReader(new InputStreamReader(System.in));
+					int amtMemory = Integer.parseInt(br.readLine());
+					
+					System.out.println("Enter JOIN offset (COL ID) for innerRel:");
+					br = new BufferedReader(new InputStreamReader(System.in));
+					int joinCol1 = Integer.parseInt(br.readLine());
+					
+					/*System.out.println("Enter SORT offset (COL ID) for innerRel:");
+					br = new BufferedReader(new InputStreamReader(System.in));
+					int sortCol1 = Integer.parseInt(br.readLine());*/
+					
+					System.out.println("Enter JOIN offset (COL ID) for outerRel:");
+					br = new BufferedReader(new InputStreamReader(System.in));
+					int joinCol2 = Integer.parseInt(br.readLine());
+					
+					/*System.out.println("Enter SORT offset (COL ID) for outerRel:");
+					br = new BufferedReader(new InputStreamReader(System.in));
+					int sortCol2 = Integer.parseInt(br.readLine());*/
+					
+					obj.topSortMerge(k, tableName1, tableName2, amtMemory, joinCol1, joinCol2);
+					
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
 				break;
 
 			default:

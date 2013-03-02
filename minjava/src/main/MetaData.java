@@ -9,6 +9,7 @@ public class MetaData {
 	private int numofStrAttr;
 	private int numofNonStrAttr;
 	private Heapfile heapFileObj;
+	private short[] Ssizes;
 	
 	public String getHeapFileName() {
 		return heapFileName;
@@ -40,6 +41,13 @@ public class MetaData {
 	public void setHeapFileObj(Heapfile heapFileObj) {
 		this.heapFileObj = heapFileObj;
 	}
+	public short[] getSsizes() {
+		return Ssizes;
+	}
+	public void setSsizes(short[] ssizes) {
+		Ssizes = ssizes;
+	}
+	
 	
 	
 	

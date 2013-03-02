@@ -223,6 +223,8 @@ class JoinsDriver implements GlobalConst {
 
 			try {
 				rid = f.insertRecord(t.returnTupleByteArray());
+				System.out.println("record id:"+rid.slotNo);
+				System.out.println("page No:"+rid.pageNo);
 			}
 			catch (Exception e) {
 				System.err.println("*** error in Heapfile.insertRecord() ***");
@@ -798,7 +800,7 @@ class JoinsDriver implements GlobalConst {
 		}
 		FldSpec [] proj_list = {
 
-				//new FldSpec(new RelSpec(RelSpec.outer), 2),
+				new FldSpec(new RelSpec(RelSpec.innerRel), 1),
 
 				new FldSpec(new RelSpec(RelSpec.innerRel), 2),
 				new FldSpec(new RelSpec(RelSpec.innerRel), 3),

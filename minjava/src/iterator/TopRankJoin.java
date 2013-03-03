@@ -32,15 +32,15 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 	private PageId[] bufs_pids;
 	private byte[][] bufs;
 	private boolean useBM = true;
-	static int scanTuple = 0;
-	static int probeTuple = 0;
+	static int[] scanTuple;
+	static int[] probeTuple;
 	private static Iterator p_i;
 	private static ArrayList<HeapElement>finalResult;
 	private static int Top_k ;
 	 private static AttrType[][] inAttrType;
 	 private static int[] len_col;
 	 private static short[][] str_size;
-	 private Heapfile temp_file_fd1;//temporary heap  file TASK 3
+	 static int[] totalTuple;
 	 Iterator[] am;
 	/*******
 	 * 
@@ -97,6 +97,10 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 		str_size=s_size;
 		Top_k = num;
 		am = _am;
+		scanTuple = new int[numTables];
+		totalTuple = new int[numTables];
+		probeTuple = new int[numTables];
+		
 		 temp1 = new Heapfile("tempfile.in");
 		
 		AttrType[] attrType = new AttrType[numTables+1];
@@ -150,7 +154,7 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 					key = tt.getStrFld(col);
 			
 					//System.out.println("key is " + key);
-					scanTuple ++;
+					scanTuple[i] ++;
 					
 					
 					KeyClass lowkey = new StringKey((String) key);
@@ -242,7 +246,7 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 		//HashMap<Object, HashMap<Integer, ArrayList<Element>>> CandidateResult = new HashMap<Object, HashMap<Integer, ArrayList<Element>>>();
 		
 		HashMap<Integer, ArrayList<Element>> CandidateResult  = new HashMap<Integer, ArrayList<Element>>();
-		int totalTuple = 0;
+		
 	
 		FldSpec[] Sprojection = new FldSpec[4];
 		for (int j = 0; j < 4; j++) {
@@ -286,7 +290,7 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 						ArrayList<Element> al3 = new ArrayList<Element>();
 						al3.add(tempelement);
 						list.add(al3);
-						totalTuple++;
+						totalTuple[i]++;
 
 						// System.out.println(" al3 " + al3.size());
 					}
@@ -309,7 +313,7 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 							al3.add(tempelement);
 							list.add(al3);
 							if(j==0)
-							totalTuple++;
+							totalTuple[i]++;
 							//t++;
 						//	System.out.println(t + " times " + list.size());
 						}
@@ -361,7 +365,7 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 		
 		
 
-		probeTuple = totalTuple - scanTuple;
+	//	probeTuple = totalTuple - scanTuple;
 		// // begin combination of fielD
 
 		
@@ -388,39 +392,7 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 
 	Heapfile resultheap = new Heapfile("resultheap.in");
 	
-	private Object FindCombination(
-			HashMap<Integer, ArrayList<Element>> candidateResult , int numTables) throws TupleUtilsException, UnknowAttrType, FieldNumberOutOfBoundException, InvalidTypeException, InvalidTupleSizeException, IOException, InvalidSlotNumberException, SpaceNotAvailableException, HFException, HFBufMgrException, HFDiskMgrException {
-
-		Tuple resulttuple = null;
-		HashMap<Integer, ArrayList<Element>> KeyTableinfo = candidateResult;
-
-		if (KeyTableinfo.size() < numTables)
-			return null;
-		ArrayList<ArrayList<Element>> list = new ArrayList<ArrayList<Element>>();
-
-		list = findList(numTables, KeyTableinfo, list);
-
-		Tuple ttt = null;
-
-		for (ArrayList<Element> elementList : list) {
-
-			resulttuple = ProjectJoin(elementList);
-			ttt = resulttuple;
-
-			int r_size = resulttuple.size();
-			resulttuple = new Tuple(r_size);
-			resulttuple.tupleCopy(ttt);
-			resulttuple.setHdr((short) jType.length, jType, t_size);
-
-			resultheap.insertRecord(resulttuple.returnTupleByteArray());
-
-		}
-		return null;
 	
-		
-		// TODO Auto-generated method stub
-		
-	}
 
 	private static FldSpec[] proj;
 
@@ -598,12 +570,12 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 	public int num_scanned(int in_rel)
 	{
 		
-		return scanTuple;	
+		return scanTuple[in_rel];	
 	}
 	
 	public int num_probed(int in_rel)
 	{
-		return probeTuple;
+		return (totalTuple[in_rel] - scanTuple[in_rel]);
 	}
 	
 

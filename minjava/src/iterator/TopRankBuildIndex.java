@@ -653,7 +653,6 @@ public class TopRankBuildIndex implements GlobalConst {
 		} catch (Exception e) {
 			status = FAIL;
 			e.printStackTrace();
-			Runtime.getRuntime().exit(1);
 		}
 		// create the index file,some problem with str case
 		short strCount = 0;
@@ -683,7 +682,7 @@ public class TopRankBuildIndex implements GlobalConst {
 		} catch (Exception e) {
 			// status = FAIL;
 			e.printStackTrace();
-			Runtime.getRuntime().exit(1);
+		
 		}
 
 		RID rid = new RID();

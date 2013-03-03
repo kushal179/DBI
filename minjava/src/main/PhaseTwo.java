@@ -442,8 +442,11 @@ public class PhaseTwo {
 		TopRankJoin rj = new TopRankJoin(numTables, joinColId, am, num, BTfile, s_sizes,
 				in, 1 , n_out_flds, len_in, amtMemory);
 		
-		System.out.println(" Num of Scaned Tuple is " + rj.num_scanned(1));
-		System.out.println(" Num of Probe Tuple is " + rj.num_probed(1));
+		
+		for(int i=0;i<numTables;i++){
+		System.out.println(" Num of Scaned Tuple for TABLE "+(i+1)+" is:" + rj.num_scanned(i));
+		System.out.println(" Num of Probe Tuple for TABLE "+(i+1)+" is:" + rj.num_probed(i));
+		}
 		Tuple t=new Tuple();
 		while((t=rj.get_next())!=null)
 		{
@@ -684,8 +687,6 @@ public class PhaseTwo {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				
-				
 				break;
 
 			default:

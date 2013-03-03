@@ -34,8 +34,9 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 	private boolean useBM = true;
 	static int scanTuple = 0;
 	static int probeTuple = 0;
-	
+	private static Iterator p_i;
 	private static ArrayList<HeapElement>finalResult;
+	private static int Top_k ;
 	 private static AttrType[][] inAttrType;
 	 private static int[] len_col;
 	 private static short[][] str_size;
@@ -93,78 +94,166 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 		inAttrType=in;
 		len_col=len_in;
 		str_size=s_size;
-		HashMap<Object, Map<Integer, Integer>> matchkey = new HashMap<Object, Map<Integer, Integer>>();
-
-		// /test assume BTree Scan
+		Top_k = num;
 		
-		BTreeFile[] btf = null;
+		Heapfile temp1 = new Heapfile("tempfile.in");
+		
+		AttrType[] attrType = new AttrType[numTables+1];
+		
+		attrType[0] = new AttrType(AttrType.attrString);
+		
+		for(int i=1;i<numTables+1;i++){
+			attrType[i] = new AttrType(AttrType.attrInteger);
+			
+		}
+		short[] Tsizes = new short[1];
+		Tsizes[0] = 30; // first elt. is 30
+		Tuple temptuple = new Tuple();
+		
+		temptuple.setHdr((short) (numTables+1), attrType, Tsizes);
+		int size = temptuple.size();
+		temptuple= new Tuple(size);
+		temptuple.setHdr((short) (numTables+1), attrType, Tsizes);
+		
+		
+		BTreeFile btf = null;
+		
+		int incr = (short) (Tsizes[0] + 2); // strlen in bytes =
+		// strlen +2
+		btf = new BTreeFile("TempIndex", AttrType.attrString, incr, 1);
+		
+		
+		HashMap<Object, Map<Integer, Integer>> matchkey = new HashMap<Object, Map<Integer, Integer>>();
+	
+		
+		// /test assume BTree Scan
+
+		Scan fscan = null;
+	
+		RID rid = new RID();
+		BTFileScan btscan;
+		KeyDataEntry temp_scan;
 
 		while (true) {
+			
 			for (int i = 0; i < numTables; i++) {
 
 				Tuple tt = null;
-				Object key;
+				String key;
 				int col = join_col_in[i];
 				if ((tt = am[i].get_next()) != null) {
 
+					AttrType[] Stypes = in[i];
+					short[] Ssizes = s_size[i];
+					tt.setHdr((short) len_in[i], Stypes, Ssizes);
 					key = tt.getStrFld(col);
+			
 					//System.out.println("key is " + key);
 					scanTuple ++;
-					if (!matchkey.containsKey(key)) {
-						int Tnum = i;
-						Map<Integer, Integer> temp = new HashMap<Integer, Integer>();
-						temp.put(Tnum, 1);
-						matchkey.put(key, temp);
-					} else {
-						if (!matchkey.get(key).containsKey(i)) {
-							matchkey.get(key).put(i, 1);
-						} else {
-							int count = matchkey.get(key).get(i) + 1;
-							matchkey.get(key).put(i, count);
+					
+					
+					KeyClass lowkey = new StringKey((String) key);
+					KeyClass hikey = new StringKey((String) key);
+					
+					btscan = btf.new_scan(lowkey, hikey);
+					Tuple ttuple = null;
+					
+					
+					if((temp_scan = btscan.get_next()) != null)
+					{
+				
+						rid = ((LeafData) temp_scan.data).getData();
+					//	System.out.println("if rid " + rid);
+						temptuple = temp1.getRecord(rid);
+					//	temptuple= new Tuple(tsize);
+						temptuple.setHdr((short) (numTables+1), attrType, Tsizes);
+					//	temptuple.print(attrType); System.out.println("+" + temptuple.getIntFld(4));
+					
+						int tsize = temptuple.size();
+						
+						
+					//	System.out.println(temptuple);
+						int counter = temptuple.getIntFld(i+2);
+						temptuple.setIntFld(i+2, counter+1);
+						temp1.updateRecord(rid, temptuple);
+					}
+					else
+					{
+				
+						temptuple.setStrFld(1, key);
+						for(int j =2; j< numTables+2; j++)
+						{
+							temptuple.setIntFld(j, 0);
 						}
+						temptuple.setIntFld(i+2, 1);
+			
+						rid = temp1.insertRecord(temptuple.returnTupleByteArray());
+					
+						
+						
+						btf.insert(new StringKey(key.toString()), rid);
+					//	System.out.println("else rid " + rid);
+						
 					}
+			
 				}
 
 			}
 
-			int TotalNum = 0;
-			java.util.Iterator<Object> CheckIter = matchkey.keySet().iterator();
-
-			while (CheckIter.hasNext()) {
-				Object key = CheckIter.next();
-				Map<Integer, Integer> Tableinfo = matchkey.get(key);
-				keyset.add(key);
-				if (Tableinfo.size() == numTables) {
-
-					int ArrangeNum = 1;
-
-					java.util.Iterator<Integer> ArrangeIter = Tableinfo
-							.keySet().iterator();
-					while (ArrangeIter.hasNext()) {
-						Integer count = Tableinfo.get(ArrangeIter.next());
-						ArrangeNum *= count;
-					}
-					TotalNum += ArrangeNum;
-				}
+			//System.out.println("finished");
+			/*count1++;
+			if(count1 > 5)
+				break;*/
+			
+			
+			
+			Tuple checktuple = null;
+			
+			FldSpec[] Sprojection = new FldSpec[4];
+			for (int j = 0; j < 4; j++) {
+				Sprojection[j] = new FldSpec(new RelSpec(RelSpec.outer), j+1);
 			}
-		//	System.out.println("TotalNum is " + TotalNum);
-			if (TotalNum >= num)
+			int totalnum = 0;
+			FileScan scan = new FileScan("tempfile.in",attrType, Tsizes,(short)(numTables+1),(numTables+1),Sprojection,null);
+			while((checktuple = scan.get_next())!= null)
+			{
+			
+				int checknum = 1;
+				for(int t =0; t< numTables ; t++)
+				{
+					checknum *= checktuple.getIntFld(t+2);
+				}
+				totalnum+=checknum;
+			
+			}
+			
+			
+			if(totalnum>=num)
 				break;
+			
+			
 		}
 
 		// /Begin random access
 
-		RID rid = new RID();
-		IoBuf ioBuf = new IoBuf();
-		ioBuf.init(bufs, _n_pages, GlobalConst.MINIBASE_PAGESIZE, temp_file_fd1);
+	
 
 		// /////// fake name
-		KeyDataEntry temp_scan;
+		//KeyDataEntry temp_scan;
 		Tuple testuple = null;
 		HashMap<Object, HashMap<Integer, ArrayList<Element>>> CandidateResult = new HashMap<Object, HashMap<Integer, ArrayList<Element>>>();
 		int totalTuple = 0;
+	
+		FldSpec[] Sprojection = new FldSpec[4];
+		for (int j = 0; j < 4; j++) {
+			Sprojection[j] = new FldSpec(new RelSpec(RelSpec.outer), j+1);
+		}
 		
-		for (Object k : keyset) {
+		FileScan scan = new FileScan("tempfile.in",attrType, Tsizes,(short)(numTables+1),(numTables+1),Sprojection,null);
+		while((testuple = scan.get_next())!= null)
+		{
+			String k = testuple.getStrFld(1);
+		
 			int i = 0;
 			if (!CandidateResult.containsKey(k)) {
 				CandidateResult.put(k,
@@ -181,16 +270,15 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 
 				BTreeFile e = o.btindex;
 				Heapfile f = o.heapfile;
-				BTFileScan scan;
+				BTFileScan hscan;
 				KeyClass lowkey = new StringKey((String) k);
 				KeyClass hikey = new StringKey((String) k);
 
-				scan = e.new_scan(lowkey, hikey);
+				hscan = e.new_scan(lowkey, hikey);
 
-				while ((temp_scan = scan.get_next()) != null) {
+				while ((temp_scan = hscan.get_next()) != null) {
 					totalTuple ++;
 					rid = ((LeafData) temp_scan.data).getData();
-					
 				//	float Score = getTupleScore(rid, ioBuf, f);
 					testuple = f.getRecord(rid);
 					testuple.setHdr((short) len_in[i], Stypes, Ssizes);
@@ -214,6 +302,13 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 		probeTuple = totalTuple - scanTuple;
 		// // begin combination of fielD
 
+		
+		Heapfile resultheap = new Heapfile("resultheap.in");
+		
+		
+		
+		
+		Tuple resulttuple = null;
 		Heap heap = null;
 		if (rank == 1)
 			heap = new MinHeap();
@@ -236,36 +331,126 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 			// list will have A's combination in the first loop and so on.
 
 			// computing the score for every element values
+			Tuple ttt = null;
+			
 			for (ArrayList<Element> elementList : list) {
-				float sum = 0;
-
-				for (Element e : elementList) {
-					if(sum == 0)
-						sum = e.score;
-					else
-						sum = (sum + e.score)/2;
-					// System.out.println("score is " + e.score);
-				}
-				// System.out.println("sum is " + sum);
-				sum = (float) roundTwoDecimals(sum);
-				heap.add(new HeapElement(sum, elementList));
+				//float sum = 0;
+				
+				resulttuple = ProjectJoin(elementList);
+				ttt = resulttuple;
+		
+				int r_size = resulttuple.size();
+				resulttuple= new Tuple(r_size);
+				resulttuple.tupleCopy(ttt);
+				resulttuple.setHdr((short) jType.length, jType, t_size);
+		
+				resultheap.insertRecord(resulttuple.returnTupleByteArray());
+				
 			}
 		}
+		
+		
+		FldSpec[]Tprojection =new  FldSpec[jType.length];
+		for(int x=0;x<Tprojection.length;x++)
+		{
+			Tprojection[x]= new FldSpec(new RelSpec(RelSpec.outer),x+1);
+		}
 
-		while (heap.size() > num) {
-			heap.remove();
-		}
-		finalResult=new ArrayList<HeapElement>();
-		while (heap.size() != 0) {
-			HeapElement ID = heap.remove();
-			finalResult.add(ID);
-		}
+		
+		TupleOrder sortOrder = null;
+		
+		sortOrder = new TupleOrder(TupleOrder.Descending);
+		
+		FileScan resultscan = new FileScan("resultheap.in",jType, t_size,(short) jType.length,jType.length ,Tprojection,null);
+		
+		p_i = new Sort(jType, (short) jType.length, t_size, resultscan,
+				jType.length, sortOrder, 4, amt_of_mem);
+		
+	//	p_i.get_next().print(jType);
 
 	}
 
+	private static FldSpec[] proj;
 
-	
-	
+	private Tuple ProjectJoin(ArrayList<Element> elementList) throws TupleUtilsException, IOException, UnknowAttrType, FieldNumberOutOfBoundException, InvalidTypeException, InvalidTupleSizeException {
+		// TODO Auto-generated method stub
+		
+		
+		ArrayList<Element> test = elementList;
+		if (test.size() < 2) {
+		System.out.println("error, less than two tables");
+		return null;
+		}
+		
+		
+		 AttrType [] Rtypes = new AttrType[3];
+		    Rtypes[0] = new AttrType (AttrType.attrString);
+		    Rtypes[1] = new AttrType (AttrType.attrString);
+		    Rtypes[2] = new AttrType (AttrType.attrReal);
+		    
+		Tuple temp1 = test.get(0).tuple;
+		//temp1.print(Rtypes);
+		Tuple temp2 = test.get(1).tuple;
+		//temp2.print(Rtypes);
+		Tuple Jtuple = new Tuple();
+		// create proj_list
+		int proj_len = len_col[0] + len_col[1] - 2;
+		proj = new FldSpec[proj_len];
+		for (int i = 0; i < len_col[0] - 1; i++) {
+		proj[i] = new FldSpec(new RelSpec(RelSpec.outer), i + 1);
+		}
+		for (int i = 0; i < len_col[1] - 1; i++) {
+		proj[i + len_col[0] - 1] = new FldSpec(
+		new RelSpec(RelSpec.innerRel), i + 1);
+		}
+		// create jtype
+		jType = new AttrType[proj_len+1];
+		/*for (int i = 0; i < proj_len; i++) {
+		jType[i] = new AttrType(AttrType.attrString);
+		}*/
+		t_size = TupleUtils.setup_op_tuple(Jtuple, jType,
+		inAttrType[0], len_col[0], inAttrType[1], len_col[1],
+		str_size[0], str_size[1], proj, proj_len,true);
+		Projection.Join(temp1, inAttrType[0], temp2, inAttrType[1], Jtuple,
+		proj, proj_len,true);
+		//Jtuple.print(jType);////////////
+		for (int i = 2; i < test.size(); i++) {
+		short[] laststr_size = t_size;
+		AttrType[] lastType = jType;
+		int lastres = jType.length;
+		Tuple temp3 = test.get(i).tuple;
+		proj_len = proj_len + len_col[i] - 1;
+		Tuple lasttuple = new Tuple();// =Jtuple;
+		lasttuple.setHdr((short) lastres, lastType, laststr_size);
+		lasttuple.tupleCopy(Jtuple);
+		// create proj;
+		proj = new FldSpec[proj_len];
+		for (int j = 0; j < lastres-1; j++) {
+		proj[j] = new FldSpec(new RelSpec(RelSpec.outer), j + 1);
+		}
+		for (int j = 0; j < len_col[i] - 1; j++) {
+		proj[j + lastres-1] = new FldSpec(new RelSpec(RelSpec.innerRel),
+		j + 1);
+		}
+		jType = new AttrType[proj_len+1];
+		t_size = TupleUtils.setup_op_tuple(Jtuple, jType, lastType,
+		lastres, inAttrType[i], len_col[i], laststr_size,
+		str_size[i], proj, proj_len,true);
+		Projection.Join(lasttuple, lastType, temp3, inAttrType[i], Jtuple,
+		proj, proj_len,true);
+		
+		
+		
+		
+		
+		}
+		counter++;
+		
+		return Jtuple;
+		
+	}
+
+
 
 	public ArrayList<ArrayList<Element>> findList(int tableNum,
 			HashMap<Integer, ArrayList<Element>> keyTable,
@@ -315,13 +500,12 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 		TopRankJoin test = new TopRankJoin(numTables, join_col, am, TopK, BTfile, s_size,
 				in, rank , n_out_flds, len_in, 10);
 		
-		test.close( am, BTfile);
-		System.out.println(" Num of Scaned Tuple is " + test.num_scanned(1));
-		System.out.println(" Num of Probe Tuple is " + test.num_probed(1));
+		//close( am, BTfile);
+	
 		Tuple t=new Tuple();
 		while((t=test.get_next())!=null)
 		{
-			t.print(jType);
+			t.print(test.jType);
 		}
 		
 
@@ -372,79 +556,27 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 
 	
 	
-	public static AttrType[] jType;
-
+	public  AttrType[] jType;
+	private static short[] t_size;
 	private static int counter = 0;
 
-	public Tuple get_next() throws TupleUtilsException, IOException,
-			UnknowAttrType, FieldNumberOutOfBoundException,
-			InvalidTypeException, InvalidTupleSizeException {
-		// TODO Auto-generated method stub
-		// create proj_list
-		if (finalResult.size() <= counter) {
-			System.out.println("Reaching end");
-			return null;
-			}
-			ArrayList<Element> test = finalResult.get(counter).heapElement;
-			if (test.size() < 2) {
-			System.out.println("error, less than two tables");
-			return null;
-			}
-			Tuple temp1 = test.get(0).tuple;
-			Tuple temp2 = test.get(1).tuple;
-			Tuple Jtuple = new Tuple();
-			// create proj_list
-			int proj_len = len_col[0] + len_col[1] - 2;
-			FldSpec[] proj = new FldSpec[proj_len];
-			for (int i = 0; i < len_col[0] - 1; i++) {
-			proj[i] = new FldSpec(new RelSpec(RelSpec.outer), i + 1);
-			}
-			for (int i = 0; i < len_col[1] - 1; i++) {
-			proj[i + len_col[0] - 1] = new FldSpec(
-			new RelSpec(RelSpec.innerRel), i + 1);
-			}
-			// create jtype
-			jType = new AttrType[proj_len+1];
-			/*for (int i = 0; i < proj_len; i++) {
-			jType[i] = new AttrType(AttrType.attrString);
-			}*/
-			short[] t_size = TupleUtils.setup_op_tuple(Jtuple, jType,
-			inAttrType[0], len_col[0], inAttrType[1], len_col[1],
-			str_size[0], str_size[1], proj, proj_len,true);
-			Projection.Join(temp1, inAttrType[0], temp2, inAttrType[1], Jtuple,
-			proj, proj_len,true);
-			for (int i = 2; i < test.size(); i++) {
-			short[] laststr_size = t_size;
-			AttrType[] lastType = jType;
-			int lastres = jType.length;
-			Tuple temp3 = test.get(i).tuple;
-			proj_len = proj_len + len_col[i] - 1;
-			Tuple lasttuple = new Tuple();// =Jtuple;
-			lasttuple.setHdr((short) lastres, lastType, laststr_size);
-			lasttuple.tupleCopy(Jtuple);
-			// create proj;
-			proj = new FldSpec[proj_len];
-			for (int j = 0; j < lastres-1; j++) {
-			proj[j] = new FldSpec(new RelSpec(RelSpec.outer), j + 1);
-			}
-			for (int j = 0; j < len_col[i] - 1; j++) {
-			proj[j + lastres-1] = new FldSpec(new RelSpec(RelSpec.innerRel),
-			j + 1);
-			}
-			jType = new AttrType[proj_len+1];
-			t_size = TupleUtils.setup_op_tuple(Jtuple, jType, lastType,
-			lastres, inAttrType[i], len_col[i], laststr_size,
-			str_size[i], proj, proj_len,true);
-			Projection.Join(lasttuple, lastType, temp3, inAttrType[i], Jtuple,
-			proj, proj_len,true);
 
-			}
-			counter++;
-			return Jtuple;
+	public Tuple get_next() throws JoinsException, IndexException,
+			InvalidTupleSizeException, InvalidTypeException,
+			PageNotReadException, TupleUtilsException, PredEvalException,
+			SortException, LowMemException, UnknowAttrType,
+			UnknownKeyTypeException, IOException, Exception {
+
+		if (Top_k-- == 0) {
+			System.out.println("reach end");
+			return null;
+		}
+
+		return p_i.get_next();
 
 	}
 
-	public void close(Iterator[] am, FileIndex[] bTfile) throws IOException, JoinsException, SortException,
+	public static void close(Iterator[] am, FileIndex[] bTfile) throws IOException, JoinsException, SortException,
 			IndexException, InvalidSlotNumberException, FileAlreadyDeletedException, InvalidTupleSizeException, HFBufMgrException, HFDiskMgrException {
 		// TODO Auto-generated method stub
 		for( Iterator a : am)
@@ -466,3 +598,4 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 	}
 
 }
+

@@ -439,7 +439,7 @@ public class PhaseTwo {
 				numTables, tableHeapName, 1,n_out_flds);
 		
 		TopRankJoin rj = new TopRankJoin(numTables, joinColId, am, num, BTfile, s_sizes,
-				in, 1 , n_out_flds, len_in, 10);
+				in, 1 , n_out_flds, len_in, amtMemory);
 		
 		System.out.println(" Num of Scaned Tuple is " + rj.num_scanned(1));
 		System.out.println(" Num of Probe Tuple is " + rj.num_probed(1));

@@ -223,6 +223,7 @@ public class PhaseTwo {
 								+ totalNumAttr2, k, innerCount, outerCount);
 				System.out.println("Total Page Access After TopKSort Merge:"
 						+ PCounter.getCounter());
+				
 				break;
 				case GlobalConst.TOPKNESTEDJOIN:
 					//relationName  access heapfile for right i/p to join

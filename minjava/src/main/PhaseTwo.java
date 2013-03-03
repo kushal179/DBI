@@ -450,6 +450,7 @@ public class PhaseTwo {
 			t.print(rj.jType);
 		}
 		//rj.close( am, BTfile);
+		System.out.println("Buffer Page Access Counter:"+PCounter.getCounter());
 		}
 		
 		catch(Exception e){

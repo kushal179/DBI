@@ -96,7 +96,7 @@ class table3 {
 
 
 
-public class topRankBuildIndex implements GlobalConst {
+public class TopRankBuildIndex implements GlobalConst {
 	private static boolean OK = true;
 	private static boolean FAIL = false;
 	
@@ -117,9 +117,9 @@ public class topRankBuildIndex implements GlobalConst {
 	
 	
 
-	public topRankBuildIndex() {
+	public TopRankBuildIndex() {
 		
-		Vector table1;
+	/*	Vector table1;
 		 Vector table2;
 		 Vector table3;
 		    //build Sailor, Boats, Reserves table
@@ -176,11 +176,11 @@ public class topRankBuildIndex implements GlobalConst {
 		    }
 
 		   
-		    /*
+		    
 		    ExtendedSystemDefs extSysDef = 
 		      new ExtendedSystemDefs( "/tmp/minibase.jointestdb", "/tmp/joinlog",
 					      1000,500,200,"Clock");
-		    */
+		    
 
 		    SystemDefs sysdef = new SystemDefs( dbpath, 1000, NUMBUF, "Clock" );
 		    
@@ -402,13 +402,13 @@ public class topRankBuildIndex implements GlobalConst {
 		      //bail out
 		      System.err.println ("*** Error creating relation for reserves");
 		      Runtime.getRuntime().exit(1);
-		    }
+		    }*/
 
 	}
 
 	// /problem????????????????????????????
 	@SuppressWarnings("null")
-	public static Iterator[] getSortedIterator(short[][] s_size, AttrType[][] in,
+	public  Iterator[] getSortedIterator(short[][] s_size, AttrType[][] in,
 			int[] len_in, int numTables, String[] tablename, int rank, int n_out_flds)
 			throws JoinsException, IndexException, InvalidTupleSizeException,
 			InvalidTypeException, PageNotReadException, TupleUtilsException,
@@ -440,7 +440,7 @@ public class topRankBuildIndex implements GlobalConst {
 
 			AttrType[] Stypes = in[i];
 			short[] Ssizes = s_size[i];
-			FldSpec[] Sprojection = new FldSpec[numTables];
+			FldSpec[] Sprojection = new FldSpec[len_in[i]];
 			for (int j = 0; j < len_in[i]; j++) {
 				Sprojection[j] = new FldSpec(new RelSpec(RelSpec.outer), j+1);
 			}
@@ -461,7 +461,7 @@ public class topRankBuildIndex implements GlobalConst {
 
 	}
 
-	public static FileIndex[] getFileIndex(short[][] s_size, AttrType[][] in,
+	public  FileIndex[] getFileIndex(short[][] s_size, AttrType[][] in,
 			int[] len_in, int numTables, String[] tablename, int rank,
 			java.lang.String[] indNames, int[] join_col , int n_out_flds) throws Exception {
 
@@ -487,7 +487,7 @@ public class topRankBuildIndex implements GlobalConst {
 	}
 
 	public static void main(String args[]) throws Exception {
-		topRankBuildIndex testtoprank = new topRankBuildIndex();
+		TopRankBuildIndex testtoprank = new TopRankBuildIndex();
 		
 		String[] tablename = {"table1.in","table2.in","table3.in"};
 		AttrType[] Stypes = new AttrType[3];

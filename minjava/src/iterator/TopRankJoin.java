@@ -96,7 +96,7 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 		HashMap<Object, Map<Integer, Integer>> matchkey = new HashMap<Object, Map<Integer, Integer>>();
 
 		// /test assume BTree Scan
-		numTables = 3;
+		
 		BTreeFile[] btf = null;
 
 		while (true) {
@@ -304,7 +304,7 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 		
 		
 		
-		topRankBuildIndex testtoprank = new topRankBuildIndex();
+		TopRankBuildIndex testtoprank = new TopRankBuildIndex();
 		System.out.println("**************get FileIndex***************");
 		FileIndex[] BTfile = testtoprank.getFileIndex(s_size, in, len_in,
 				numTables, tablename, rank, indNames, join_col, n_out_flds);
@@ -315,9 +315,9 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 		TopRankJoin test = new TopRankJoin(numTables, join_col, am, TopK, BTfile, s_size,
 				in, rank , n_out_flds, len_in, 10);
 		
-		close( am, BTfile);
-		System.out.println(" Num of Scaned Tuple is " + num_scanned(1));
-		System.out.println(" Num of Probe Tuple is " + num_probed(1));
+		test.close( am, BTfile);
+		System.out.println(" Num of Scaned Tuple is " + test.num_scanned(1));
+		System.out.println(" Num of Probe Tuple is " + test.num_probed(1));
 		Tuple t=new Tuple();
 		while((t=test.get_next())!=null)
 		{
@@ -358,13 +358,13 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 		return joinList;
 	}
 
-	static int num_scanned(int in_rel)
+	public int num_scanned(int in_rel)
 	{
 		
 		return scanTuple;	
 	}
 	
-	static int num_probed(int in_rel)
+	public int num_probed(int in_rel)
 	{
 		return probeTuple;
 	}
@@ -372,7 +372,7 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 
 	
 	
-	private static AttrType[] jType;
+	public static AttrType[] jType;
 
 	private static int counter = 0;
 
@@ -444,7 +444,7 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 
 	}
 
-	public static void close(Iterator[] am, FileIndex[] bTfile) throws IOException, JoinsException, SortException,
+	public void close(Iterator[] am, FileIndex[] bTfile) throws IOException, JoinsException, SortException,
 			IndexException, InvalidSlotNumberException, FileAlreadyDeletedException, InvalidTupleSizeException, HFBufMgrException, HFDiskMgrException {
 		// TODO Auto-generated method stub
 		for( Iterator a : am)

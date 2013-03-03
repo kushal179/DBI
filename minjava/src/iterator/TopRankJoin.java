@@ -41,6 +41,7 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 	 private static int[] len_col;
 	 private static short[][] str_size;
 	 private Heapfile temp_file_fd1;//temporary heap  file TASK 3
+	 Iterator[] am;
 	/*******
 	 * 
 	 * @param numTables
@@ -82,8 +83,8 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 	 * SortException, LowMemException, UnknowAttrType, UnknownKeyTypeException,
 	 * Exception {
 	 */
-
-	public TopRankJoin(int numTables, int[] join_col_in, Iterator[] am,
+	 Heapfile temp1;
+	public TopRankJoin(int numTables, int[] join_col_in, Iterator[] _am,
 			int num, FileIndex[] BTfile, short[][] s_size, AttrType[][] in,
 			int rank,int n_out_flds, int[] len_in, int amt_of_mem) throws JoinsException, IndexException,
 			InvalidTupleSizeException, InvalidTypeException,
@@ -95,8 +96,8 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 		len_col=len_in;
 		str_size=s_size;
 		Top_k = num;
-		
-		Heapfile temp1 = new Heapfile("tempfile.in");
+		am = _am;
+		 temp1 = new Heapfile("tempfile.in");
 		
 		AttrType[] attrType = new AttrType[numTables+1];
 		
@@ -645,7 +646,36 @@ public class TopRankJoin extends Iterator implements GlobalConst {
 	@Override
 	public void close() throws IOException, JoinsException, SortException,
 			IndexException {
-		// TODO Auto-generated method stub
+		if (!closeFlag) {
+						
+			try {
+				resultheap.deleteFile();
+				temp1.deleteFile();
+				
+			} catch (InvalidSlotNumberException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (FileAlreadyDeletedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (InvalidTupleSizeException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (HFBufMgrException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (HFDiskMgrException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+
+			try {
+				}catch (Exception e) {
+					throw new JoinsException(e, "TopRankJoin.java: error in closing iterator.");
+				}
+			}
+		closeFlag = true;
 		
 	}
 

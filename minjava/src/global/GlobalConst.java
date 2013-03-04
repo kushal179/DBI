@@ -9,7 +9,7 @@ public interface GlobalConst {
   public static final int MINIBASE_PAGESIZE = 1024;           // in bytes
 
   /** Size of each frame. */
-  public static final int MINIBASE_BUFFER_POOL_SIZE = 1024;   // in Frames
+ // public static final int MINIBASE_BUFFER_POOL_SIZE = 1024;   // in Frames
 
   public static final int MAX_SPACE = 1024;   // in Frames
   

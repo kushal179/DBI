@@ -228,9 +228,9 @@ public class PhaseTwo {
 						amtMemory, fileScan1, fileScan2, false, false,
 						ascending, outFilter, proj_list, totalNumAttr1
 								+ totalNumAttr2, k, innerCount, outerCount);
-				System.out.println("HFCounter After TOPKNESTEDJOIN: "+ PCounter.hfCounter);
-				System.out.println("BufCounter After TOPKNESTEDJOIN: "+ PCounter.bufCounter);
-				SystemDefs.JavabaseBM.flushAllPages();
+				System.out.println("HFCounter After TOPKSORTMERGEJOIN: "+ PCounter.hfCounter);
+				System.out.println("BufCounter After TOPKSORTMERGEJOIN: "+ PCounter.bufCounter);
+			//	SystemDefs.JavabaseBM.flushAllPages();
 				
 				break;
 				case GlobalConst.TOPKNESTEDJOIN:
@@ -245,7 +245,7 @@ public class PhaseTwo {
 							totalNumAttr1+ totalNumAttr2, k,innerCount,outerCount);
 					System.out.println("HFCounter After TOPKNESTEDJOIN: "+ PCounter.hfCounter);
 					System.out.println("BufCounter After TOPKNESTEDJOIN: "+ PCounter.bufCounter);
-					SystemDefs.JavabaseBM.flushAllPages();
+					//SystemDefs.JavabaseBM.flushAllPages();
 					break;
 					
 				default:
@@ -382,10 +382,10 @@ public class PhaseTwo {
 			} catch (Exception e) {
 				System.err.println("" + e);
 			}
-			System.out.println("HFCounter After TOPKNESTEDJOIN: "+ PCounter.hfCounter);
-			System.out.println("BufCounter After TOPKNESTEDJOIN: "+ PCounter.bufCounter);
+			System.out.println("HFCounter After TABLE CREATION: "+ PCounter.hfCounter);
+			System.out.println("BufCounter After TABLE CREATION: "+ PCounter.bufCounter);
 			
-			try {
+			/*try {
 				SystemDefs.JavabaseBM.flushAllPages();
 			} catch (HashOperationException e) {
 				// TODO Auto-generated catch block
@@ -406,7 +406,7 @@ public class PhaseTwo {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
+*/
 		}
 	}
 
@@ -485,9 +485,9 @@ public class PhaseTwo {
 			t.print(rj.jType);
 		}
 		rj.close();
-		System.out.println("HFCounter After TOPKNESTEDJOIN: "+ PCounter.hfCounter);
-		System.out.println("BufCounter After TOPKNESTEDJOIN: "+ PCounter.bufCounter);
-		SystemDefs.JavabaseBM.flushAllPages();
+		System.out.println("HFCounter After TOPKRANKJOIN: "+ PCounter.hfCounter);
+		System.out.println("BufCounter After TOPKRANKJOIN: "+ PCounter.bufCounter);
+	//	SystemDefs.JavabaseBM.flushAllPages();
 		}
 		
 		catch(Exception e){

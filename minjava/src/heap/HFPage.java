@@ -40,7 +40,7 @@ public class HFPage extends Page
   public static final int PREV_PAGE = 8;
   public static final int NEXT_PAGE = 12;
   public static final int CUR_PAGE = 16;
-  
+  public PCounter pCounter = new PCounter();
   /* Warning:
      These items must all pack tight, (no padding) for
      the current implementation to work properly.
@@ -191,7 +191,9 @@ public class HFPage extends Page
   public PageId getPrevPage()   
     throws IOException 
     {
-      prevPage.pid =  Convert.getIntValue (PREV_PAGE, data);
+	  prevPage.pid =  Convert.getIntValue (PREV_PAGE, data);
+	  //System.out.println("getPrevPage hfCounter increased");
+      pCounter.hfIncrement();
       return prevPage;
     }
   
@@ -215,7 +217,8 @@ public class HFPage extends Page
     throws IOException
     {
       nextPage.pid =  Convert.getIntValue (NEXT_PAGE, data);
-           
+	 // System.out.println("getNextPage hfCounter increased");
+      pCounter.hfIncrement();     
       return nextPage;
     }
   
@@ -239,7 +242,8 @@ public class HFPage extends Page
     throws IOException
     {
       curPage.pid =  Convert.getIntValue (CUR_PAGE, data);
-      
+	//  System.out.println("getCurPage hfCounter increased");
+      pCounter.hfIncrement();
       return curPage;
     }
   

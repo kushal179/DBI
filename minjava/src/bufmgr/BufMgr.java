@@ -818,8 +818,10 @@ public class BufMgr implements GlobalConst{
     throws BufMgrException {
     
     try {
+    	//bmhashdisplay();	
+     // System.out.println("Write page buffer counter increased");
       SystemDefs.JavabaseDB.write_page(pageno, page);
-      pc.increment();
+      pc.bufIncrement(); //increment counter for writing page 
     }
     catch (Exception e) {
       throw new BufMgrException(e,"BufMgr.java: write_page() failed");
@@ -831,8 +833,10 @@ public class BufMgr implements GlobalConst{
     throws BufMgrException {
     
     try {
+    	//bmhashdisplay();
+     // System.out.println("Read page buffer counter increased");
       SystemDefs.JavabaseDB.read_page(pageno, page);
-      pc.increment();
+      pc.bufIncrement(); //increment counter for reading page 
     }
     catch (Exception e) {
       throw new BufMgrException(e,"BufMgr.java: read_page() failed");

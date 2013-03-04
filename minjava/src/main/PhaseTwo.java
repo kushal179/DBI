@@ -46,6 +46,12 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import bufmgr.BufMgrException;
+import bufmgr.HashOperationException;
+import bufmgr.PageNotFoundException;
+import bufmgr.PagePinnedException;
+import bufmgr.PageUnpinnedException;
+
 import diskmgr.PCounter;
 
 public class PhaseTwo {
@@ -171,7 +177,8 @@ public class PhaseTwo {
 			RID rid = heapfile.insertRecord(t.returnTupleByteArray());
 			System.out.println("RECORD ID SLOT NO:" + rid.slotNo);
 			System.out.println("PAGE NO:" + rid.pageNo);
-			System.out.println("PAGE ACCESS::" + PCounter.counter);
+			System.out.println("BufCounter:" + PCounter.bufCounter);
+			System.out.println("HfCounter:" + PCounter.hfCounter);
 		}
 		tableMap.put(fileName, metaData);
 		file.close();
@@ -221,8 +228,9 @@ public class PhaseTwo {
 						amtMemory, fileScan1, fileScan2, false, false,
 						ascending, outFilter, proj_list, totalNumAttr1
 								+ totalNumAttr2, k, innerCount, outerCount);
-				System.out.println("Total Page Access After TopKSort Merge:"
-						+ PCounter.getCounter());
+				System.out.println("HFCounter After TOPKNESTEDJOIN: "+ PCounter.hfCounter);
+				System.out.println("BufCounter After TOPKNESTEDJOIN: "+ PCounter.bufCounter);
+				SystemDefs.JavabaseBM.flushAllPages();
 				
 				break;
 				case GlobalConst.TOPKNESTEDJOIN:
@@ -235,8 +243,9 @@ public class PhaseTwo {
 							relationName, outFilter, 
 							null, proj_list, 
 							totalNumAttr1+ totalNumAttr2, k,innerCount,outerCount);
-					System.out.println("Total Page Access After TopKNestedLoop Join:"
-							+ PCounter.getCounter());
+					System.out.println("HFCounter After TOPKNESTEDJOIN: "+ PCounter.hfCounter);
+					System.out.println("BufCounter After TOPKNESTEDJOIN: "+ PCounter.bufCounter);
+					SystemDefs.JavabaseBM.flushAllPages();
 					break;
 					
 				default:
@@ -373,7 +382,30 @@ public class PhaseTwo {
 			} catch (Exception e) {
 				System.err.println("" + e);
 			}
-			System.out.println("PAGE ACCESS::" + PCounter.counter);
+			System.out.println("HFCounter After TOPKNESTEDJOIN: "+ PCounter.hfCounter);
+			System.out.println("BufCounter After TOPKNESTEDJOIN: "+ PCounter.bufCounter);
+			
+			try {
+				SystemDefs.JavabaseBM.flushAllPages();
+			} catch (HashOperationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (PageUnpinnedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (PagePinnedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (PageNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (BufMgrException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
 		}
 	}
@@ -453,7 +485,9 @@ public class PhaseTwo {
 			t.print(rj.jType);
 		}
 		rj.close();
-		System.out.println("Buffer Page Access Counter:"+PCounter.getCounter());
+		System.out.println("HFCounter After TOPKNESTEDJOIN: "+ PCounter.hfCounter);
+		System.out.println("BufCounter After TOPKNESTEDJOIN: "+ PCounter.bufCounter);
+		SystemDefs.JavabaseBM.flushAllPages();
 		}
 		
 		catch(Exception e){

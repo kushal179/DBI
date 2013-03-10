@@ -178,14 +178,15 @@ public class Projection {
 						Jtuple.setIntFld(i + 1, t1.getIntFld(perm_mat[i].offset));
 						break;
 					case AttrType.attrReal:
-						/*Jtuple.setFloFld(i + 1, t1.getFloFld(perm_mat[i].offset));
-						break;*/
+						Jtuple.setFloFld(i + 1, t1.getFloFld(perm_mat[i].offset));
+						break;
 						//Task2: to calculate avg of the score
-						if(innerCounter==0)
-							Jtuple.setFloFld(i + 1, (t1.getFloFld(perm_mat[i].offset)+t2.getFloFld(inCount))/2);
+						/*if(innerCounter==0)
+							//Jtuple.setFloFld(i + 1, (t1.getFloFld(perm_mat[i].offset)+t2.getFloFld(inCount))/2);
+							Jtuple.setScore((t1.getScore()+t2.getScore())/2);
 						else
 							Jtuple.setFloFld(i + 1, t1.getFloFld(perm_mat[i].offset));
-						break;
+						break;*/
 					case AttrType.attrString:
 						Jtuple.setStrFld(i + 1, t1.getStrFld(perm_mat[i].offset));
 						break;
@@ -216,6 +217,8 @@ public class Projection {
 					break;
 				}
 			}
+			float val=(t1.getScore()+t2.getScore())/2;
+			Jtuple.setScore(val);
 			return;
 		}
 

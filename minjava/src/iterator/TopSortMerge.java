@@ -20,7 +20,7 @@ public class TopSortMerge extends SortMerge implements GlobalConst {
 	private AttrType _in1[], _in2[];
 	private Tuple Jtuple;
 	ArrayList<Tuple> sortTupleList;
-	AttrType[] Jtypes;
+	
 	private int nOutFlds;
 
 
@@ -104,14 +104,34 @@ public class TopSortMerge extends SortMerge implements GlobalConst {
 		Jtuple = new Tuple();
 		// CHANGED BY US....n_out_flds decreased by 1 in order to merge the two
 		// score columns
-		Jtypes = new AttrType[n_out_flds - 1];
+		AttrType[] Jtypes = new AttrType[n_out_flds - 1];
 		// AttrType[] Jtypes = new AttrType[n_out_flds];
 		short[] ts_size = null;
 		nOutFlds = n_out_flds - 1; // changed by us
+		Tuple tempT = null;
+		iterator.Iterator tempFileScan = null;
+		
+		
 		try {
 			ts_size = TupleUtils.setup_op_tuple(Jtuple, Jtypes, in1, len_in1, in2, len_in2,
 					s1_sizes, s2_sizes, proj_list, n_out_flds - 1);
-			System.out.println(ts_size[1]);
+			AttrType[] attTypes = new AttrType[nOutFlds];
+			short[] Ssizes = new short[nOutFlds - 1];
+			for (int j = 0; j < nOutFlds - 1; j++) {
+
+				attTypes[j] = new AttrType(AttrType.attrString);
+				Ssizes[j] = 30;
+			}
+			attTypes[nOutFlds - 1] = new AttrType(AttrType.attrReal);
+			Heapfile tempHf = new Heapfile("tempSortMerger");
+			while ((tempT = smj.get_next()) != null){
+				int size = tempT.size();
+				Tuple temp = new Tuple(size);
+				temp.setHdr((short) nOutFlds, attTypes, Ssizes);
+				temp.tupleCopy(tempT);
+				tempHf.insertRecord(temp.returnTupleByteArray());
+			}
+			tempFileScan = new FileScan("tempSortMerger", attTypes, Ssizes, (short) nOutFlds, nOutFlds, projections(nOutFlds), null);
 		} catch (Exception e) {
 			throw new TupleUtilsException(e, "Exception is caught by SortMerge.java");
 		}
@@ -122,7 +142,7 @@ public class TopSortMerge extends SortMerge implements GlobalConst {
 		    Sort sort_names = null;
 		    try {
 		      sort_names = new Sort (Jtypes,(short)nOutFlds, ts_size,
-					     (iterator.Iterator) smj, Jtypes.length, descending,30, amt_of_mem);
+					     (iterator.Iterator) tempFileScan, nOutFlds, descending,30, amt_of_mem);
 		    }
 		    catch (Exception e) {
 		      System.err.println ("*** Error preparing for nested_loop_join");
@@ -142,8 +162,14 @@ public class TopSortMerge extends SortMerge implements GlobalConst {
 		        e.printStackTrace();
 		      }
 	}
-	
-	public ArrayList<Tuple> getTopSortMergeTuple()
+	public FldSpec[] projections(int offSetCount) {
+		FldSpec[] projections = new FldSpec[offSetCount];
+		for (int i = 0; i < offSetCount; i++) {
+			projections[i] = new FldSpec(new RelSpec(RelSpec.outer), i + 1);
+		}
+		return projections;
+	}
+	/*public ArrayList<Tuple> getTopSortMergeTuple()
 	{
 		return sortTupleList;
 	}
@@ -158,7 +184,7 @@ public class TopSortMerge extends SortMerge implements GlobalConst {
 				e.printStackTrace();
 			}
 		}
-	}
+	}*/
 
 	
 

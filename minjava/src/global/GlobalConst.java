@@ -2,24 +2,24 @@ package global;
 
 public interface GlobalConst {
 
-  public static final int MINIBASE_MAXARRSIZE = 50;
-  public static final int NUMBUF = 50;
+  public static final int MINIBASE_MAXARRSIZE = 500;
+  public static final int NUMBUF = 2000;
 
   /** Size of page. */
-  public static final int MINIBASE_PAGESIZE = 1024;           // in bytes
+  public static final int MINIBASE_PAGESIZE = 8192;           // in bytes
 
   /** Size of each frame. */
  // public static final int MINIBASE_BUFFER_POOL_SIZE = 1024;   // in Frames
 
-  public static final int MAX_SPACE = 1024;   // in Frames
+  public static final int MAX_SPACE = 8192;   // in Frames
   
   /**
    * in Pages => the DBMS Manager tells the DB how much disk 
    * space is available for the database.
    */
-  public static final int MINIBASE_DB_SIZE = 10000;           
-  public static final int MINIBASE_MAX_TRANSACTIONS = 100;
-  public static final int MINIBASE_DEFAULT_SHAREDMEM_SIZE = 1000;
+  public static final int MINIBASE_DB_SIZE = 100000;           
+  public static final int MINIBASE_MAX_TRANSACTIONS = 500;
+  public static final int MINIBASE_DEFAULT_SHAREDMEM_SIZE = 5000;
   
   /**
    * also the name of a relation

@@ -246,7 +246,6 @@ public class TupleUtils
 		for (count = 0, i = 0; i < len_in2; i++)
 			if (in2[i].attrType == AttrType.attrString)
 				sizesT2[i] = t2_str_sizes[count++];
-
 		int n_strs = 0; 
 		for (i = 0; i < nOutFlds; i++)
 		{
@@ -261,6 +260,24 @@ public class TupleUtils
 				res_attrs[i] = new AttrType(in1[proj_list[i].offset-1].attrType);
 			else if (proj_list[i].relation.key == RelSpec.innerRel)
 				res_attrs[i] = new AttrType(in2[proj_list[i].offset-1].attrType);
+			
+		}
+		boolean flag = false;
+		for(int k=0;k<res_attrs.length;k++){
+			
+			if(res_attrs[k].attrType==AttrType.attrReal){
+				flag=true;
+			}
+			}
+		if(!flag){
+			res_attrs[nOutFlds-1] = new AttrType(AttrType.attrReal);
+		}
+		else{
+			for (int j = 0; j < nOutFlds - 1; j++) {
+
+				res_attrs[j] = new AttrType(AttrType.attrString);
+			}
+			res_attrs[nOutFlds - 1] = new AttrType(AttrType.attrReal);
 		}
 
 		// Now construct the res_str_sizes array.

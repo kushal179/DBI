@@ -524,7 +524,7 @@ public void setHdr (short numFlds,  AttrType types[], short strSizes[])
    case AttrType.attrSymbol:
      break;
    }
-   System.out.print(", ");
+   System.out.print(" ");
  } 
  
  switch(type[fldCnt-1].attrType) {

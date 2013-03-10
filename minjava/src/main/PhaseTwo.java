@@ -78,7 +78,7 @@ public class PhaseTwo {
 			System.err.println("" + e);
 		}
 
-		SystemDefs sysdef = new SystemDefs(dbpath, 1000, GlobalConst.NUMBUF,
+		SystemDefs sysdef = new SystemDefs(dbpath, 10000, GlobalConst.NUMBUF,
 				"Clock");
 	}
 
@@ -228,8 +228,7 @@ public class PhaseTwo {
 						amtMemory, fileScan1, fileScan2, false, false,
 						ascending, outFilter, proj_list, totalNumAttr1
 								+ totalNumAttr2, k, innerCount, outerCount);
-				System.out.println("HFCounter After TOPKSORTMERGEJOIN: "+ PCounter.hfCounter);
-				System.out.println("BufCounter After TOPKSORTMERGEJOIN: "+ PCounter.bufCounter);
+				
 			//	SystemDefs.JavabaseBM.flushAllPages();
 				
 				break;
@@ -243,8 +242,6 @@ public class PhaseTwo {
 							relationName, outFilter, 
 							null, proj_list, 
 							totalNumAttr1+ totalNumAttr2, k,innerCount,outerCount);
-					System.out.println("HFCounter After TOPKNESTEDJOIN: "+ PCounter.hfCounter);
-					System.out.println("BufCounter After TOPKNESTEDJOIN: "+ PCounter.bufCounter);
 					//SystemDefs.JavabaseBM.flushAllPages();
 					break;
 					
@@ -252,6 +249,8 @@ public class PhaseTwo {
 					System.out.println("No Matching operation found");
 				
 				}
+				System.out.println("HFCounter *********: "+ PCounter.hfCounter);
+				System.out.println("BufCounter *********: "+ PCounter.bufCounter);
 
 				
 			} catch (Exception e) {
@@ -503,13 +502,13 @@ public class PhaseTwo {
 		// TODO Auto-generated method stub
 		int ch = 0;
 		PhaseTwo obj = new PhaseTwo();
-		while (ch < 8) {
+		while (ch < 6) {
 			System.out
 					.println("************* PLEASE SELECT ONE OF THE FOLLOWING OPTIONS ***************");
 			System.out
 					.println(" 1- Create a table \n 2- Print a table \n 3- Select Distinct query"
-							+ "\n 4- Add tuples \n 5- Delete a tuple \n 6- Find top K SortMergeJoin"
-							+ "\n 7 Find top K NestedJoin \n 8 Find top K Rank Join");
+							+ "\n 4- Find top K SortMergeJoin"
+							+ "\n 5 Find top K NestedJoin \n 6 Find top K Rank Join");
 			System.out
 					.println("************************************************************************");
 			BufferedReader lineOfText = new BufferedReader(
@@ -571,15 +570,9 @@ public class PhaseTwo {
 					e.printStackTrace();
 				}
 				break;
+			
+
 			case 4:
-				System.out.println("Add tuples");
-				break;
-
-			case 5:
-				System.out.println("Delete a tuple");
-				break;
-
-			case 6:
 				System.out
 						.println("*************Find top K SortMergeJoin****************");
 
@@ -633,7 +626,7 @@ public class PhaseTwo {
 				}
 
 				break;
-			case 7:
+			case 5:
 				System.out
 						.println("*************Find top K Nested Join****************");
 
@@ -686,7 +679,7 @@ public class PhaseTwo {
 					e.printStackTrace();
 				}
 				break;
-			case 8:
+			case 6:
 				System.out
 					.println("*************Find top K Rank Join****************");
 				try {

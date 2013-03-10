@@ -1,13 +1,18 @@
 package iterator;
    
 
-import heap.*;
-import global.*;
-import bufmgr.*;
-import diskmgr.*;
-import index.*;
-import java.lang.*;
-import java.io.*;
+import global.AttrType;
+import global.RID;
+import heap.Heapfile;
+import heap.InvalidTupleSizeException;
+import heap.InvalidTypeException;
+import heap.Scan;
+import heap.Tuple;
+import index.IndexException;
+
+import java.io.IOException;
+
+import bufmgr.PageNotReadException;
 /** 
  *
  *  This file contains an implementation of the nested loops join
@@ -180,15 +185,11 @@ public class NestedLoopsJoins  extends Iterator
       done  = false;
       get_from_outer = true;
       
-   // CHANGED BY US....n_out_flds decreased by 1 in order to merge the two
-   		// score columns
-      //AttrType[] Jtypes = new AttrType[n_out_flds];
-      AttrType[] Jtypes = new AttrType[n_out_flds-1];
+      AttrType[] Jtypes = new AttrType[n_out_flds];
       short[]    t_size;
       
       perm_mat = proj_list;
-      //nOutFlds = n_out_flds;
-      nOutFlds = n_out_flds - 1; // changed by us
+      nOutFlds = n_out_flds; 
       try {
 	t_size = TupleUtils.setup_op_tuple(Jtuple, Jtypes,
 					   in1, len_in1, in2, len_in2,

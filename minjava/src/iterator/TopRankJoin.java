@@ -1,28 +1,34 @@
 package iterator;
 
-import heap.*;
-import global.*;
-import diskmgr.*;
-import btree.BTFileScan;
-import btree.BTreeFile;
-import btree.IndexFile;
-import btree.IndexFileScan;
-import btree.IntegerKey;
-import btree.KeyClass;
-import btree.KeyDataEntry;
-import btree.LeafData;
-import btree.StringKey;
-import bufmgr.*;
-import index.*;
+import global.AttrType;
+import global.GlobalConst;
+import global.PageId;
+import global.RID;
+import heap.FileAlreadyDeletedException;
+import heap.HFBufMgrException;
+import heap.HFDiskMgrException;
+import heap.Heapfile;
+import heap.InvalidSlotNumberException;
+import heap.InvalidTupleSizeException;
+import heap.InvalidTypeException;
+import heap.Scan;
+import heap.Tuple;
+import index.IndexException;
 
-import java.io.*;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Vector;
+
+import btree.BTFileScan;
+import btree.BTreeFile;
+import btree.KeyClass;
+import btree.KeyDataEntry;
+import btree.LeafData;
+import btree.StringKey;
+import bufmgr.PageNotReadException;
 
 public class TopRankJoin extends Iterator implements GlobalConst {
 

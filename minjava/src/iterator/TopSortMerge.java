@@ -3,11 +3,9 @@ package iterator;
 import global.AttrType;
 import global.GlobalConst;
 import global.TupleOrder;
-import heap.Heapfile;
 import heap.Tuple;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * This file contains the interface for the sort_merg joins. We name the two
@@ -19,10 +17,8 @@ import java.util.ArrayList;
 public class TopSortMerge extends SortMerge implements GlobalConst {
 	private AttrType _in1[], _in2[];
 	private Tuple Jtuple;
-	ArrayList<Tuple> sortTupleList;
-	
-	private int nOutFlds;
 
+	private int nOutFlds;
 
 	/**
 	 * constructor,initialization
@@ -76,25 +72,21 @@ public class TopSortMerge extends SortMerge implements GlobalConst {
 	 * @exception IOException
 	 *                some I/O fault
 	 */
-	public TopSortMerge(AttrType in1[], int len_in1, short s1_sizes[], AttrType in2[], int len_in2,
-			short s2_sizes[],
+	public TopSortMerge(AttrType in1[], int len_in1, short s1_sizes[], AttrType in2[], int len_in2, short s2_sizes[],
 
-			int join_col_in1, int sortFld1Len, int join_col_in2, int sortFld2Len,
+	int join_col_in1, int sortFld1Len, int join_col_in2, int sortFld2Len,
 
-			int amt_of_mem, Iterator am1, Iterator am2,
+	int amt_of_mem, Iterator am1, Iterator am2,
 
-			boolean in1_sorted, boolean in2_sorted, TupleOrder order,
+	boolean in1_sorted, boolean in2_sorted, TupleOrder order,
 
-			CondExpr outFilter[], FldSpec proj_list[], int n_out_flds,int _num,int _innerCounter,int _outerCounter) throws JoinNewFailed,
-			JoinLowMemory, SortException, TupleUtilsException, IOException
+	CondExpr outFilter[], FldSpec proj_list[], int n_out_flds, int _num, int _innerCounter, int _outerCounter) throws JoinNewFailed, JoinLowMemory,
+			SortException, TupleUtilsException, IOException
 
 	{
-		SortMerge smj = new SortMerge(in1, len_in1, s1_sizes, in2, len_in2, 
-				s2_sizes, join_col_in1, sortFld1Len, join_col_in2, 
-				sortFld2Len, amt_of_mem, am1, am2, 
-				in1_sorted, in2_sorted, order, outFilter, 
-				proj_list, n_out_flds, _innerCounter, _outerCounter);
-		
+		SortMerge smj = new SortMerge(in1, len_in1, s1_sizes, in2, len_in2, s2_sizes, join_col_in1, sortFld1Len, join_col_in2, sortFld2Len, amt_of_mem, am1,
+				am2, in1_sorted, in2_sorted, order, outFilter, proj_list, n_out_flds, _innerCounter, _outerCounter);
+
 		_in1 = new AttrType[in1.length];
 		_in2 = new AttrType[in2.length];
 		System.arraycopy(in1, 0, _in1, 0, in1.length);
@@ -102,66 +94,42 @@ public class TopSortMerge extends SortMerge implements GlobalConst {
 		int count = 0;
 
 		Jtuple = new Tuple();
-		// CHANGED BY US....n_out_flds decreased by 1 in order to merge the two
-		// score columns
-		AttrType[] Jtypes = new AttrType[n_out_flds - 1];
-		// AttrType[] Jtypes = new AttrType[n_out_flds];
-		short[] ts_size = null;
-		nOutFlds = n_out_flds - 1; // changed by us
-		Tuple tempT = null;
-		iterator.Iterator tempFileScan = null;
-		
-		
-		try {
-			ts_size = TupleUtils.setup_op_tuple(Jtuple, Jtypes, in1, len_in1, in2, len_in2,
-					s1_sizes, s2_sizes, proj_list, n_out_flds - 1);
-			AttrType[] attTypes = new AttrType[nOutFlds];
-			short[] Ssizes = new short[nOutFlds - 1];
-			for (int j = 0; j < nOutFlds - 1; j++) {
 
-				attTypes[j] = new AttrType(AttrType.attrString);
-				Ssizes[j] = 30;
-			}
-			attTypes[nOutFlds - 1] = new AttrType(AttrType.attrReal);
-			Heapfile tempHf = new Heapfile("tempSortMerger");
-			while ((tempT = smj.get_next()) != null){
-				int size = tempT.size();
-				Tuple temp = new Tuple(size);
-				temp.setHdr((short) nOutFlds, attTypes, Ssizes);
-				temp.tupleCopy(tempT);
-				tempHf.insertRecord(temp.returnTupleByteArray());
-			}
-			tempFileScan = new FileScan("tempSortMerger", attTypes, Ssizes, (short) nOutFlds, nOutFlds, projections(nOutFlds), null);
+		AttrType[] Jtypes = new AttrType[n_out_flds];
+
+		short[] ts_size = null;
+		nOutFlds = n_out_flds;
+
+		try {
+			ts_size = TupleUtils.setup_op_tuple(Jtuple, Jtypes, in1, len_in1, in2, len_in2, s1_sizes, s2_sizes, proj_list, n_out_flds);
+
 		} catch (Exception e) {
 			throw new TupleUtilsException(e, "Exception is caught by SortMerge.java");
 		}
 
-
 		// Now, that stuff is setup, all we have to do is a get_next !!!!
-		 TupleOrder descending = new TupleOrder(TupleOrder.Descending);
-		    Sort sort_names = null;
-		    try {
-		      sort_names = new Sort (Jtypes,(short)nOutFlds, ts_size,
-					     (iterator.Iterator) tempFileScan, nOutFlds, descending,30, amt_of_mem);
-		    }
-		    catch (Exception e) {
-		      System.err.println ("*** Error preparing for nested_loop_join");
-		      e.printStackTrace();	     
-		    }
-		    
-		    Tuple t = null;
-		    sortTupleList = new ArrayList<Tuple>();
-		    try {
-		      while ((t = sort_names.get_next()) != null  && _num > count) {
-		    	//sortTupleList.add(t);  
-		        t.print(Jtypes);
-		        count++;
-		      }
-		    } catch (Exception e) {
-		        System.err.println (""+e);
-		        e.printStackTrace();
-		      }
+		TupleOrder descending = new TupleOrder(TupleOrder.Descending);
+		Sort sort_names = null;
+		try {
+			sort_names = new Sort(Jtypes, (short) nOutFlds, ts_size, (iterator.Iterator) smj, nOutFlds, descending, 30, amt_of_mem);
+		} catch (Exception e) {
+			System.err.println("*** Error preparing for nested_loop_join");
+			e.printStackTrace();
+		}
+
+		Tuple t = null;
+		try {
+			while ((t = sort_names.get_next()) != null && _num > count) {
+
+				t.print(Jtypes);
+				count++;
+			}
+		} catch (Exception e) {
+			System.err.println("" + e);
+			e.printStackTrace();
+		}
 	}
+
 	public FldSpec[] projections(int offSetCount) {
 		FldSpec[] projections = new FldSpec[offSetCount];
 		for (int i = 0; i < offSetCount; i++) {
@@ -169,26 +137,5 @@ public class TopSortMerge extends SortMerge implements GlobalConst {
 		}
 		return projections;
 	}
-	/*public ArrayList<Tuple> getTopSortMergeTuple()
-	{
-		return sortTupleList;
-	}
-	
-	public void printTopSortMergeTuple(){
-		java.util.Iterator<Tuple> it = sortTupleList.iterator();
-		while(it.hasNext()){
-			Tuple t = it.next();
-			try {
-				t.print(Jtypes);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}*/
-
-	
-
-	
-	
 
 }

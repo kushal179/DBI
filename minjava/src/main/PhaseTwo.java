@@ -36,21 +36,12 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import bufmgr.BufMgrException;
-import bufmgr.HashOperationException;
-import bufmgr.PageNotFoundException;
-import bufmgr.PagePinnedException;
-import bufmgr.PageUnpinnedException;
 
 import diskmgr.PCounter;
 
@@ -61,8 +52,7 @@ public class PhaseTwo {
 	static HashMap<String, MetaData> tableMap = new HashMap<String, MetaData>();
 
 	public PhaseTwo() {
-		String dbpath = "/tmp/" + System.getProperty("user.name")
-				+ ".minibase.jointestdb";
+		String dbpath = "/tmp/" + System.getProperty("user.name") + ".minibase.jointestdb";
 		String logpath = "/tmp/" + System.getProperty("user.name") + ".joinlog";
 
 		String remove_cmd = "/bin/rm -rf ";
@@ -78,19 +68,15 @@ public class PhaseTwo {
 			System.err.println("" + e);
 		}
 
-		SystemDefs sysdef = new SystemDefs(dbpath, 10000, GlobalConst.NUMBUF,
-				"Clock");
+		SystemDefs sysdef = new SystemDefs(dbpath, 10000, GlobalConst.NUMBUF, "Clock");
 	}
 
 	/**
 	 * @param fileName
 	 *            File name of the table in xls format
 	 */
-	public void createTable(String fileName) throws IOException,
-			FileNotFoundException, InvalidFormatException,
-			FieldNumberOutOfBoundException, HFDiskMgrException,
-			HFBufMgrException, HFException, SpaceNotAvailableException,
-			InvalidTupleSizeException, InvalidSlotNumberException {
+	public void createTable(String fileName) throws IOException, FileNotFoundException, InvalidFormatException, FieldNumberOutOfBoundException,
+			HFDiskMgrException, HFBufMgrException, HFException, SpaceNotAvailableException, InvalidTupleSizeException, InvalidSlotNumberException {
 		FileInputStream file = new FileInputStream(new File(fileName));
 
 		Workbook wb = WorkbookFactory.create(file);
@@ -157,9 +143,7 @@ public class PhaseTwo {
 					if (index == numAttrField)
 						t.setScore((float) cell.getNumericCellValue());
 					else
-						t.setStrFld(index,
-								((Double) cell.getNumericCellValue())
-										.toString());
+						t.setStrFld(index, ((Double) cell.getNumericCellValue()).toString());
 					break;
 				case Cell.CELL_TYPE_STRING:
 					// System.out.print(cell.getStringCellValue() + "\t\t");
@@ -185,9 +169,7 @@ public class PhaseTwo {
 
 	}
 
-	
-	public void topKOperation(int k, String tableName1, String tableName2,
-			int amtMemory, int joinCol1, int joinCol2, int operation) {
+	public void topKOperation(int k, String tableName1, String tableName2, int amtMemory, int joinCol1, int joinCol2, int operation) {
 		// TODO: if time permits accept order from User i.e. ASC OR DESC
 		TupleOrder ascending = new TupleOrder(TupleOrder.Ascending);
 		TopSortMerge sm = null;
@@ -205,54 +187,40 @@ public class PhaseTwo {
 				condExpr(outFilter, joinCol1, joinCol2);
 				int totalNumAttr1 = meta1.getNumOfAttr();
 				int totalNumAttr2 = meta2.getNumOfAttr();
-				FldSpec[] proj_list = getFieldProjection(totalNumAttr1,
-						totalNumAttr2);
+				FldSpec[] proj_list = getFieldProjection(totalNumAttr1, totalNumAttr2);
 				int innerCount = getCount(proj_list, RelSpec.innerRel);
 				int outerCount = proj_list.length - innerCount;
 				iterator.Iterator fileScan1 = null;
 				iterator.Iterator fileScan2 = null;
-				fileScan1 = new FileScan(getHeapFileName(tableName1),
-						generateAttrTypeArray(totalNumAttr1),
-						meta1.getSsizes(), (short) totalNumAttr1,
+				fileScan1 = new FileScan(getHeapFileName(tableName1), generateAttrTypeArray(totalNumAttr1), meta1.getSsizes(), (short) totalNumAttr1,
 						(short) totalNumAttr1, projections(totalNumAttr1), null);
-				fileScan2 = new FileScan(getHeapFileName(tableName2),
-						generateAttrTypeArray(totalNumAttr2),
-						meta2.getSsizes(), (short) totalNumAttr2,
+				fileScan2 = new FileScan(getHeapFileName(tableName2), generateAttrTypeArray(totalNumAttr2), meta2.getSsizes(), (short) totalNumAttr2,
 						(short) totalNumAttr2, projections(totalNumAttr2), null);
-				switch(operation){
+				switch (operation) {
 				case GlobalConst.TOPKSORTMERGER:
-				sm = new TopSortMerge(generateAttrTypeArray(totalNumAttr1),
-						totalNumAttr1, meta1.getSsizes(),
-						generateAttrTypeArray(totalNumAttr2), totalNumAttr2,
-						meta2.getSsizes(), joinCol1, 30, joinCol2, 30,
-						amtMemory, fileScan1, fileScan2, false, false,
-						ascending, outFilter, proj_list, totalNumAttr1
-								+ totalNumAttr2, k, innerCount, outerCount);
-				
-			//	SystemDefs.JavabaseBM.flushAllPages();
-				
-				break;
-				case GlobalConst.TOPKNESTEDJOIN:
-					//relationName  access heapfile for right i/p to join
-					String relationName = getHeapFileName(tableName2);
-					nj = new TopNestedLoopsJoins(generateAttrTypeArray(totalNumAttr1), totalNumAttr1, 
-							meta1.getSsizes(), generateAttrTypeArray(totalNumAttr2), 
-							totalNumAttr2, meta2.getSsizes(), 
-							amtMemory, fileScan1, 
-							relationName, outFilter, 
-							null, proj_list, 
-							totalNumAttr1+ totalNumAttr2, k,innerCount,outerCount);
-					//SystemDefs.JavabaseBM.flushAllPages();
+					sm = new TopSortMerge(generateAttrTypeArray(totalNumAttr1), totalNumAttr1, meta1.getSsizes(), generateAttrTypeArray(totalNumAttr2),
+							totalNumAttr2, meta2.getSsizes(), joinCol1, 30, joinCol2, 30, amtMemory, fileScan1, fileScan2, false, false, ascending, outFilter,
+							proj_list, totalNumAttr1 + totalNumAttr2, k, innerCount, outerCount);
+
+					// SystemDefs.JavabaseBM.flushAllPages();
+
 					break;
-					
+				case GlobalConst.TOPKNESTEDJOIN:
+					// relationName access heapfile for right i/p to join
+					String relationName = getHeapFileName(tableName2);
+					nj = new TopNestedLoopsJoins(generateAttrTypeArray(totalNumAttr1), totalNumAttr1, meta1.getSsizes(), generateAttrTypeArray(totalNumAttr2),
+							totalNumAttr2, meta2.getSsizes(), amtMemory, fileScan1, relationName, outFilter, null, proj_list, totalNumAttr1 + totalNumAttr2, k,
+							innerCount, outerCount);
+					// SystemDefs.JavabaseBM.flushAllPages();
+					break;
+
 				default:
 					System.out.println("No Matching operation found");
-				
-				}
-				System.out.println("HFCounter *********: "+ PCounter.hfCounter);
-				System.out.println("BufCounter *********: "+ PCounter.bufCounter);
 
-				
+				}
+				System.out.println("HFCounter *********: " + PCounter.hfCounter);
+				System.out.println("BufCounter *********: " + PCounter.bufCounter);
+
 			} catch (Exception e) {
 				System.err.println("" + e);
 				e.printStackTrace();
@@ -264,11 +232,11 @@ public class PhaseTwo {
 		expr[0].next = null;
 		expr[0].op = new AttrOperator(AttrOperator.aopEQ);
 		expr[0].type1 = new AttrType(AttrType.attrSymbol);
-		expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer),
-				joinCol1);// Relation_1 outer
+		expr[0].operand1.symbol = new FldSpec(new RelSpec(RelSpec.outer), joinCol1);// Relation_1
+																					// outer
 		expr[0].type2 = new AttrType(AttrType.attrSymbol);
-		expr[0].operand2.symbol = new FldSpec(new RelSpec(RelSpec.innerRel),
-				joinCol2);// Relation_1 inner
+		expr[0].operand2.symbol = new FldSpec(new RelSpec(RelSpec.innerRel), joinCol2);// Relation_1
+																						// inner
 		expr[1] = null;
 
 	}
@@ -295,15 +263,13 @@ public class PhaseTwo {
 
 			int offSetCount = 1;
 			int i;
-			for (i = 0; i < totalNumAttr1; i++) {
-				proj_list[i] = new FldSpec(new RelSpec(RelSpec.innerRel),
-						offSetCount);
+			for (i = 0; i < totalNumAttr2; i++) {
+				proj_list[i] = new FldSpec(new RelSpec(RelSpec.innerRel), offSetCount);
 				offSetCount++;
 			}
 			offSetCount = 1;
-			for (int j = 0; j < totalNumAttr2; j++) {
-				proj_list[i] = new FldSpec(new RelSpec(RelSpec.outer),
-						offSetCount);
+			for (int j = 0; j < totalNumAttr1; j++) {
+				proj_list[i] = new FldSpec(new RelSpec(RelSpec.outer), offSetCount);
 				offSetCount++;
 				i++;
 			}
@@ -371,9 +337,7 @@ public class PhaseTwo {
 			}
 			attTypes[numOfAttr - 1] = new AttrType(AttrType.attrReal);
 			try {
-				fileScan = new FileScan(getHeapFileName(fileName), attTypes,
-						Ssizes, (short) numOfAttr, (short) numOfAttr,
-						projections(numOfAttr), null);
+				fileScan = new FileScan(getHeapFileName(fileName), attTypes, Ssizes, (short) numOfAttr, (short) numOfAttr, projections(numOfAttr), null);
 				Tuple t = null;
 				while ((t = fileScan.get_next()) != null) {
 					t.print(attTypes);
@@ -381,31 +345,8 @@ public class PhaseTwo {
 			} catch (Exception e) {
 				System.err.println("" + e);
 			}
-			System.out.println("HFCounter After TABLE CREATION: "+ PCounter.hfCounter);
-			System.out.println("BufCounter After TABLE CREATION: "+ PCounter.bufCounter);
-			
-			/*try {
-				SystemDefs.JavabaseBM.flushAllPages();
-			} catch (HashOperationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (PageUnpinnedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (PagePinnedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (PageNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (BufMgrException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-*/
+			System.out.println("HFCounter After TABLE CREATION: " + PCounter.hfCounter);
+			System.out.println("BufCounter After TABLE CREATION: " + PCounter.bufCounter);
 		}
 	}
 
@@ -426,11 +367,8 @@ public class PhaseTwo {
 			}
 			attTypes[numOfAttr - 1] = new AttrType(AttrType.attrReal);
 			try {
-				fileScan = new FileScan(getHeapFileName(fileName), attTypes,
-						Ssizes, (short) numOfAttr, (short) numOfAttr,
-						projections(numOfAttr), null);
-				distinct = new DuplElim(attTypes, (short) numOfAttr, Ssizes,
-						fileScan, 10, false);
+				fileScan = new FileScan(getHeapFileName(fileName), attTypes, Ssizes, (short) numOfAttr, (short) numOfAttr, projections(numOfAttr), null);
+				distinct = new DuplElim(attTypes, (short) numOfAttr, Ssizes, fileScan, 10, false);
 				Tuple t = null;
 				while ((t = distinct.get_next()) != null) {
 					t.print(attTypes);
@@ -440,59 +378,64 @@ public class PhaseTwo {
 			}
 
 		}
-		
-	
+
 	}
-	private void topRankJoin(int numTables,String[] tableNameList,int[] joinColId,int amtMemory,int num){
-		AttrType[][] in = new AttrType[numTables][];		//provides list of field types for each table
-		short[][] s_sizes = new short[numTables][];			//provides the length of the string fields in each relation
-		int[] len_in = new int[numTables];					//provides # of columns of each table
-		String[] tableHeapName = new String[numTables];		//provides # of heapfile corresponding to each table created
-		String[] indNames = new String[numTables];			//provides the index file name for each field that is being joined
+
+	private void topRankJoin(int numTables, String[] tableNameList, int[] joinColId, int amtMemory, int num) {
+		AttrType[][] in = new AttrType[numTables][]; // provides list of field
+														// types for each table
+		short[][] s_sizes = new short[numTables][]; // provides the length of
+													// the string fields in each
+													// relation
+		int[] len_in = new int[numTables]; // provides # of columns of each
+											// table
+		String[] tableHeapName = new String[numTables]; // provides # of
+														// heapfile
+														// corresponding to each
+														// table created
+		String[] indNames = new String[numTables]; // provides the index file
+													// name for each field that
+													// is being joined
 		int n_out_flds = 0;
-		for(int i=0;i<numTables;i++){
+		for (int i = 0; i < numTables; i++) {
 			MetaData meta = tableMap.get(tableNameList[i]);
 			s_sizes[i] = meta.getSsizes();
 			len_in[i] = meta.getNumOfAttr();
 			in[i] = generateAttrTypeArray(meta.getNumOfAttr());
 			tableHeapName[i] = meta.getHeapFileName();
-			indNames[i] = "BtreeIndex"+(i+1);
-			n_out_flds = n_out_flds + meta.getNumOfAttr();;
+			indNames[i] = "BtreeIndex" + (i + 1);
+			n_out_flds = n_out_flds + meta.getNumOfAttr();
+			;
 		}
-		//FldSpec[] proj_list = projections(n_out_flds);
+		// FldSpec[] proj_list = projections(n_out_flds);
 		TopRankBuildIndex topRankBuildIndex = new TopRankBuildIndex();
 		System.out.println("**************get FileIndex***************");
-		try{
-		FileIndex[] BTfile = topRankBuildIndex.getFileIndex(s_sizes, in, len_in,
-				numTables, tableHeapName, 1, indNames, joinColId, n_out_flds);
+		try {
+			FileIndex[] BTfile = topRankBuildIndex.getFileIndex(s_sizes, in, len_in, numTables, tableHeapName, 1, indNames, joinColId, n_out_flds);
 
-		System.out.println("**************get SortedIterator ***************");
-		iterator.Iterator[] am = topRankBuildIndex.getSortedIterator(s_sizes, in, len_in,
-				numTables, tableHeapName, 1,n_out_flds);
-		
-		TopRankJoin rj = new TopRankJoin(numTables, joinColId, am, num, BTfile, s_sizes,
-				in, 1 , n_out_flds, len_in, amtMemory);
-		
-		
-		for(int i=0;i<numTables;i++){
-		System.out.println(" Num of Scaned Tuple for TABLE "+(i+1)+" is:" + rj.num_scanned(i));
-		System.out.println(" Num of Probe Tuple for TABLE "+(i+1)+" is:" + rj.num_probed(i));
+			System.out.println("**************get SortedIterator ***************");
+			iterator.Iterator[] am = topRankBuildIndex.getSortedIterator(s_sizes, in, len_in, numTables, tableHeapName, 1, n_out_flds);
+
+			TopRankJoin rj = new TopRankJoin(numTables, joinColId, am, num, BTfile, s_sizes, in, 1, n_out_flds, len_in, amtMemory);
+
+			for (int i = 0; i < numTables; i++) {
+				System.out.println(" Num of Scaned Tuple for TABLE " + (i + 1) + " is:" + rj.num_scanned(i));
+				System.out.println(" Num of Probe Tuple for TABLE " + (i + 1) + " is:" + rj.num_probed(i));
+			}
+			Tuple t = new Tuple();
+			while ((t = rj.get_next()) != null) {
+				t.print(rj.jType);
+			}
+			rj.close();
+			System.out.println("HFCounter After TOPKRANKJOIN: " + PCounter.hfCounter);
+			System.out.println("BufCounter After TOPKRANKJOIN: " + PCounter.bufCounter);
+			// SystemDefs.JavabaseBM.flushAllPages();
 		}
-		Tuple t=new Tuple();
-		while((t=rj.get_next())!=null)
-		{
-			t.print(rj.jType);
-		}
-		rj.close();
-		System.out.println("HFCounter After TOPKRANKJOIN: "+ PCounter.hfCounter);
-		System.out.println("BufCounter After TOPKRANKJOIN: "+ PCounter.bufCounter);
-	//	SystemDefs.JavabaseBM.flushAllPages();
-		}
-		
-		catch(Exception e){
+
+		catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	/**
@@ -503,16 +446,11 @@ public class PhaseTwo {
 		int ch = 0;
 		PhaseTwo obj = new PhaseTwo();
 		while (ch < 6) {
-			System.out
-					.println("************* PLEASE SELECT ONE OF THE FOLLOWING OPTIONS ***************");
-			System.out
-					.println(" 1- Create a table \n 2- Print a table \n 3- Select Distinct query"
-							+ "\n 4- Find top K SortMergeJoin"
-							+ "\n 5 Find top K NestedJoin \n 6 Find top K Rank Join");
-			System.out
-					.println("************************************************************************");
-			BufferedReader lineOfText = new BufferedReader(
-					new InputStreamReader(System.in));
+			System.out.println("************* PLEASE SELECT ONE OF THE FOLLOWING OPTIONS ***************");
+			System.out.println(" 1- Create a table \n 2- Print a table \n 3- Select Distinct query" + "\n 4- Find top K SortMergeJoin"
+					+ "\n 5 Find top K NestedJoin \n 6 Find top K Rank Join");
+			System.out.println("************************************************************************");
+			BufferedReader lineOfText = new BufferedReader(new InputStreamReader(System.in));
 			try {
 				String textLine = lineOfText.readLine();
 				ch = Integer.parseInt(textLine);
@@ -526,8 +464,7 @@ public class PhaseTwo {
 			case 1:
 
 				System.out.println("Enter xls file name:");
-				BufferedReader fileName = new BufferedReader(
-						new InputStreamReader(System.in));
+				BufferedReader fileName = new BufferedReader(new InputStreamReader(System.in));
 				try {
 					String file = fileName.readLine();
 
@@ -548,8 +485,7 @@ public class PhaseTwo {
 			case 2:
 				System.out.println("SELECT * FROM <table Name>");
 				System.out.println("Enter table name including .xlsx:");
-				BufferedReader fName = new BufferedReader(
-						new InputStreamReader(System.in));
+				BufferedReader fName = new BufferedReader(new InputStreamReader(System.in));
 				try {
 					String file = fName.readLine();
 					obj.printTable(file);
@@ -561,8 +497,7 @@ public class PhaseTwo {
 			case 3:
 				System.out.println("SELECT DISTINCT * FROM <table Name>");
 				System.out.println("Enter table name including .xlsx:");
-				BufferedReader ip = new BufferedReader(new InputStreamReader(
-						System.in));
+				BufferedReader ip = new BufferedReader(new InputStreamReader(System.in));
 				try {
 					String file = ip.readLine();
 					obj.printDistinctTuple(file);
@@ -570,16 +505,13 @@ public class PhaseTwo {
 					e.printStackTrace();
 				}
 				break;
-			
 
 			case 4:
-				System.out
-						.println("*************Find top K SortMergeJoin****************");
+				System.out.println("*************Find top K SortMergeJoin****************");
 
 				try {
 					System.out.println("Enter Top K value:");
-					BufferedReader br = new BufferedReader(
-							new InputStreamReader(System.in));
+					BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 					int k = Integer.parseInt(br.readLine());
 					System.out.println("Enter Name of Relation 1:");
 					br = new BufferedReader(new InputStreamReader(System.in));
@@ -592,32 +524,16 @@ public class PhaseTwo {
 					br = new BufferedReader(new InputStreamReader(System.in));
 					int amtMemory = Integer.parseInt(br.readLine());
 
-					System.out
-							.println("Enter JOIN offset (COL ID) for innerRel:");
+					System.out.println("Enter JOIN offset (COL ID) for innerRel:");
 					br = new BufferedReader(new InputStreamReader(System.in));
 					int joinCol1 = Integer.parseInt(br.readLine());
 
-					/*
-					 * System.out.println("Enter SORT offset (COL ID) for innerRel:"
-					 * ); br = new BufferedReader(new
-					 * InputStreamReader(System.in)); int sortCol1 =
-					 * Integer.parseInt(br.readLine());
-					 */
-
-					System.out
-							.println("Enter JOIN offset (COL ID) for outerRel:");
+					System.out.println("Enter JOIN offset (COL ID) for outerRel:");
 					br = new BufferedReader(new InputStreamReader(System.in));
 					int joinCol2 = Integer.parseInt(br.readLine());
 
-					/*
-					 * System.out.println("Enter SORT offset (COL ID) for outerRel:"
-					 * ); br = new BufferedReader(new
-					 * InputStreamReader(System.in)); int sortCol2 =
-					 * Integer.parseInt(br.readLine());
-					 */
 
-					obj.topKOperation(k, tableName1, tableName2, amtMemory,
-							joinCol1, joinCol2, GlobalConst.TOPKSORTMERGER);
+					obj.topKOperation(k, tableName1, tableName2, amtMemory, joinCol1, joinCol2, GlobalConst.TOPKSORTMERGER);
 
 				} catch (NumberFormatException e) {
 					e.printStackTrace();
@@ -627,13 +543,11 @@ public class PhaseTwo {
 
 				break;
 			case 5:
-				System.out
-						.println("*************Find top K Nested Join****************");
+				System.out.println("*************Find top K Nested Join****************");
 
 				try {
 					System.out.println("Enter Top K value:");
-					BufferedReader br = new BufferedReader(
-							new InputStreamReader(System.in));
+					BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 					int k = Integer.parseInt(br.readLine());
 					System.out.println("Enter Name of Relation 1:");
 					br = new BufferedReader(new InputStreamReader(System.in));
@@ -646,32 +560,15 @@ public class PhaseTwo {
 					br = new BufferedReader(new InputStreamReader(System.in));
 					int amtMemory = Integer.parseInt(br.readLine());
 
-					System.out
-							.println("Enter JOIN offset (COL ID) for innerRel:");
+					System.out.println("Enter JOIN offset (COL ID) for innerRel:");
 					br = new BufferedReader(new InputStreamReader(System.in));
 					int joinCol1 = Integer.parseInt(br.readLine());
 
-					/*
-					 * System.out.println("Enter SORT offset (COL ID) for innerRel:"
-					 * ); br = new BufferedReader(new
-					 * InputStreamReader(System.in)); int sortCol1 =
-					 * Integer.parseInt(br.readLine());
-					 */
-
-					System.out
-							.println("Enter JOIN offset (COL ID) for outerRel:");
+					System.out.println("Enter JOIN offset (COL ID) for outerRel:");
 					br = new BufferedReader(new InputStreamReader(System.in));
 					int joinCol2 = Integer.parseInt(br.readLine());
 
-					/*
-					 * System.out.println("Enter SORT offset (COL ID) for outerRel:"
-					 * ); br = new BufferedReader(new
-					 * InputStreamReader(System.in)); int sortCol2 =
-					 * Integer.parseInt(br.readLine());
-					 */
-
-					obj.topKOperation(k, tableName1, tableName2, amtMemory,
-							joinCol1, joinCol2, GlobalConst.TOPKNESTEDJOIN);
+					obj.topKOperation(k, tableName1, tableName2, amtMemory, joinCol1, joinCol2, GlobalConst.TOPKNESTEDJOIN);
 
 				} catch (NumberFormatException e) {
 					e.printStackTrace();
@@ -680,36 +577,33 @@ public class PhaseTwo {
 				}
 				break;
 			case 6:
-				System.out
-					.println("*************Find top K Rank Join****************");
+				System.out.println("*************Find top K Rank Join****************");
 				try {
 					BufferedReader br;
 					System.out.println("Enter Top K value:");
-					br = new BufferedReader(
-							new InputStreamReader(System.in));
+					br = new BufferedReader(new InputStreamReader(System.in));
 					int k = Integer.parseInt(br.readLine());
-					
+
 					System.out.println("Enter Number of relation");
-					br = new BufferedReader(
-							new InputStreamReader(System.in));
+					br = new BufferedReader(new InputStreamReader(System.in));
 					int numTables = Integer.parseInt(br.readLine());
 					String[] tableNameList = new String[numTables];
 					int[] joinColId = new int[numTables];
-					for(int i=0;i<numTables;i++){
-						System.out.println("Enter Name of Relation "+(i+1)+":");
+					for (int i = 0; i < numTables; i++) {
+						System.out.println("Enter Name of Relation " + (i + 1) + ":");
 						br = new BufferedReader(new InputStreamReader(System.in));
 						tableNameList[i] = br.readLine();
-						
-						System.out.println("Enter offset(Join Col id) for Relation "+(i+1)+":");
+
+						System.out.println("Enter offset(Join Col id) for Relation " + (i + 1) + ":");
 						br = new BufferedReader(new InputStreamReader(System.in));
 						joinColId[i] = Integer.parseInt(br.readLine());
 					}
 					System.out.println("Enter Amount of Memory:");
 					br = new BufferedReader(new InputStreamReader(System.in));
 					int amtMemory = Integer.parseInt(br.readLine());
-					
+
 					obj.topRankJoin(numTables, tableNameList, joinColId, amtMemory, k);
-				}catch (NumberFormatException e) {
+				} catch (NumberFormatException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
 					e.printStackTrace();

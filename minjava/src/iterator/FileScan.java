@@ -139,6 +139,36 @@ public class FileScan extends  Iterator
 	}        
       }
     }
+  
+  public Tuple get_next_NRA()
+		    throws JoinsException,
+			   IOException,
+			   InvalidTupleSizeException,
+			   InvalidTypeException,
+			   PageNotReadException, 
+			   PredEvalException,
+			   UnknowAttrType,
+			   FieldNumberOutOfBoundException,
+			   WrongPermat
+		    {     
+		      RID rid = new RID();;
+		      
+		      while(true) {
+			if((tuple1 =  scan.getNext(rid)) == null) {
+			  return null;
+			}
+			
+			tuple1.setHdr(in1_len, _in1, s_sizes);
+			if (PredEval.Eval(OutputFilter, tuple1, null, _in1, null) == true){
+			  Projection.Project(tuple1, _in1,  Jtuple, perm_mat, nOutFlds);
+			
+			  Tuple copyJTuple = new Tuple();
+			  copyJTuple.setHdr(in1_len, _in1, s_sizes);
+			  copyJTuple.tupleCopy(Jtuple);
+			  return  copyJTuple;
+			}        
+		      }
+		    }
 
   /**
    *implement the abstract method close() from super class Iterator

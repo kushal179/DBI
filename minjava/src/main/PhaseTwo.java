@@ -22,6 +22,7 @@ import iterator.FileIndex;
 import iterator.FileScan;
 import iterator.FldSpec;
 import iterator.RelSpec;
+import iterator.TopNRAJoin;
 import iterator.TopNestedLoopsJoins;
 import iterator.TopRankBuildIndex;
 import iterator.TopRankJoin;
@@ -321,6 +322,25 @@ public class PhaseTwo {
 		return projections;
 	}
 
+	private iterator.Iterator getFileScan(MetaData meta){
+		iterator.Iterator fileScan = null;
+		int numOfAttr = meta.getNumOfAttr();
+		AttrType[] attTypes = new AttrType[numOfAttr];
+		short[] Ssizes = new short[numOfAttr - 1];
+		for (int j = 0; j < numOfAttr - 1; j++) {
+
+			attTypes[j] = new AttrType(AttrType.attrString);
+			Ssizes[j] = 30;
+		}
+		attTypes[numOfAttr - 1] = new AttrType(AttrType.attrReal);
+		try {
+			fileScan = new FileScan(meta.getHeapFileName(), attTypes, Ssizes, (short) numOfAttr, (short) numOfAttr, projections(numOfAttr), null);
+			
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+		return fileScan;
+	}
 	private void printTable(String fileName) {
 		MetaData meta = tableMap.get(fileName);
 		if (meta == null)
@@ -380,6 +400,30 @@ public class PhaseTwo {
 		}
 
 	}
+	private void topNRAJoin(int numTables, String[] tableNameList, int[] join_col_in, int amt_of_mem, int num){
+		AttrType[][] in = new AttrType[numTables][]; // provides list of field
+													// types for each table
+		short[][] s_sizes = new short[numTables][]; // provides the length of
+													// the string fields in each relation
+		int[] len_in = new int[numTables]; 			// provides # of columns of each table
+		String[] tableHeapName = new String[numTables]; // provides # of heapfile corresponding to each table created
+		String[] indNames = new String[numTables]; // provides the index file name for each field that is being joined
+		int n_out_flds = 0;
+        iterator.Iterator[] _am = new iterator.Iterator[numTables];
+        FldSpec[] proj_list=null;// mostly wont be used
+		for (int i = 0; i < numTables; i++) {
+			MetaData meta = tableMap.get(tableNameList[i]);
+			s_sizes[i] = meta.getSsizes();
+			len_in[i] = meta.getNumOfAttr();
+			in[i] = generateAttrTypeArray(meta.getNumOfAttr());
+			tableHeapName[i] = meta.getHeapFileName();
+			n_out_flds = n_out_flds + meta.getNumOfAttr();
+			_am[i] = getFileScan(meta);
+		}
+		
+		TopNRAJoin nra = new TopNRAJoin(numTables, in, len_in, s_sizes, join_col_in, _am, amt_of_mem, null, proj_list, n_out_flds, num,tableNameList);
+		
+	}
 
 	private void topRankJoin(int numTables, String[] tableNameList, int[] joinColId, int amtMemory, int num) {
 		AttrType[][] in = new AttrType[numTables][]; // provides list of field
@@ -405,7 +449,7 @@ public class PhaseTwo {
 			tableHeapName[i] = meta.getHeapFileName();
 			indNames[i] = "BtreeIndex" + (i + 1);
 			n_out_flds = n_out_flds + meta.getNumOfAttr();
-			;
+
 		}
 		// FldSpec[] proj_list = projections(n_out_flds);
 		TopRankBuildIndex topRankBuildIndex = new TopRankBuildIndex();
@@ -445,10 +489,10 @@ public class PhaseTwo {
 		// TODO Auto-generated method stub
 		int ch = 0;
 		PhaseTwo obj = new PhaseTwo();
-		while (ch < 6) {
+		while (ch < 8) {
 			System.out.println("************* PLEASE SELECT ONE OF THE FOLLOWING OPTIONS ***************");
 			System.out.println(" 1- Create a table \n 2- Print a table \n 3- Select Distinct query" + "\n 4- Find top K SortMergeJoin"
-					+ "\n 5 Find top K NestedJoin \n 6 Find top K Rank Join");
+					+ "\n 5 Find top K NestedJoin \n 6 Find top K Rank Join \n 7 Find top NRA");
 			System.out.println("************************************************************************");
 			BufferedReader lineOfText = new BufferedReader(new InputStreamReader(System.in));
 			try {
@@ -604,6 +648,39 @@ public class PhaseTwo {
 
 					obj.topRankJoin(numTables, tableNameList, joinColId, amtMemory, k);
 				} catch (NumberFormatException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				break;
+			case 7:
+				System.out.println("*************Find top NRA****************");
+				try{
+					BufferedReader br;
+					System.out.println("Enter Top K value:");
+					br = new BufferedReader(new InputStreamReader(System.in));
+					int k = Integer.parseInt(br.readLine());
+
+					System.out.println("Enter Number of relation");
+					br = new BufferedReader(new InputStreamReader(System.in));
+					int numTables = Integer.parseInt(br.readLine());
+					String[] tableNameList = new String[numTables];
+					int[] joinColId = new int[numTables];
+					for (int i = 0; i < numTables; i++) {
+						System.out.println("Enter Name of Relation " + (i + 1) + ":");
+						br = new BufferedReader(new InputStreamReader(System.in));
+						tableNameList[i] = br.readLine();
+
+						System.out.println("Enter offset(Join Col id) for Relation " + (i + 1) + ":");
+						br = new BufferedReader(new InputStreamReader(System.in));
+						joinColId[i] = Integer.parseInt(br.readLine());
+					}
+					System.out.println("Enter Amount of Memory:");
+					br = new BufferedReader(new InputStreamReader(System.in));
+					int amtMemory = Integer.parseInt(br.readLine());
+					obj.topNRAJoin(numTables, tableNameList, joinColId, amtMemory, k);
+					
+				}catch (NumberFormatException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
 					e.printStackTrace();
